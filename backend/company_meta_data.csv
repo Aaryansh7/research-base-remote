@@ -1,0 +1,10 @@
+accessionNumber,reportDate,form,ticker,edgar_link,json_filepath
+0000063908-25-000025,2025-03-31,10-Q,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390825000025/mcd-20250331.htm,./xbrl_json_data\mcd-20250331.json
+0000063908-25-000012,2024-12-31,10-K,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390825000012/mcd-20241231.htm,./xbrl_json_data\mcd-20241231.json
+0000063908-24-000156,2024-09-30,10-Q,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390824000156/mcd-20240930.htm,./xbrl_json_data\mcd-20240930.json
+0000063908-24-000123,2024-06-30,10-Q,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390824000123/mcd-20240630.htm,./xbrl_json_data\mcd-20240630.json
+0000063908-24-000092,2024-03-31,10-Q,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390824000092/mcd-20240331.htm,./xbrl_json_data\mcd-20240331.json
+0000063908-24-000072,2023-12-31,10-K,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390824000072/mcd-20231231.htm,./xbrl_json_data\mcd-20231231.json
+0000063908-23-000012,2022-12-31,10-K,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390823000012/mcd-20221231.htm,./xbrl_json_data\mcd-20221231.json
+0000063908-22-000011,2021-12-31,10-K,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390822000011/mcd-20211231.htm,./xbrl_json_data\mcd-20211231.json
+0000063908-21-000013,2020-12-31,10-K,mcd,https://www.sec.gov/Archives/edgar/data/0000063908/000006390821000013/mcd-20201231.htm,./xbrl_json_data\mcd-20201231.json
