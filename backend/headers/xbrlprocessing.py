@@ -56,7 +56,7 @@ def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
         'Revenue', 'OperatingIncome', 'Equity(BV)', 'ShortTermDebt(BV)',
         'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', \
         'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',\
-        'LeaseDueAfterYearFive', 'NetIncome'
+        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities'
     ]
 
     # Get sorted report dates to use as column headers
@@ -504,6 +504,30 @@ def xbrl_data_processor(trailing_data, ticker):
             if not row_index.empty:
                 # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = netincome
+
+            # Current Assets Filling
+            currentasset = find_latest_tuple_by_string(company_main_list, ["AssetsCurrent"])
+            if currentasset is not None:
+                currentasset = find_latest_tuple_by_string(company_main_list, ["AssetsCurrent"])[1]
+            else:
+                currentasset = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentAssets'].index
+
+            if not row_index.empty:
+                # If a matching accounting variable row is found, update the cell
+                initialized_financial_df.at[row_index[0], report_date_str] = currentasset
+
+            # Current Liabilities Filling
+            currentliability = find_latest_tuple_by_string(company_main_list, ["LiabilitiesCurrent"])
+            if currentliability is not None:
+                currentliability = find_latest_tuple_by_string(company_main_list, ["LiabilitiesCurrent"])[1]
+            else:
+                currentliability = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentLiabilities'].index
+
+            if not row_index.empty:
+                # If a matching accounting variable row is found, update the cell
+                initialized_financial_df.at[row_index[0], report_date_str] = currentliability
 
     print(initialized_financial_df)
     return initialized_financial_df

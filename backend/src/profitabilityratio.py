@@ -96,7 +96,7 @@ def get_operatingmargin(company_data_filepath):
     Reads company_data.csv, extracts Revenue and Operating income data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
     """
-    print(f"Backend received request for Net Margin and Revenue data.")
+    print(f"Backend received request for Operating Income and Revenue data.")
 
     try:
         # Ensure company_data.csv exists before attempting to read
@@ -106,12 +106,12 @@ def get_operatingmargin(company_data_filepath):
         df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
-        # Find the rows for 'NetIncome' and 'Revenue'
+        # Find the rows for 'OperatingIncome' and 'Revenue'
         operating_income_row = df[df['Accounting Variable'] == 'OperatingIncome']
         revenue_row = df[df['Accounting Variable'] == 'Revenue']
 
         if operating_income_row.empty or revenue_row.empty:
-            return jsonify({"status": "error", "message": "NetIncome or Revenue data not found in company_data.csv."}), 404
+            return jsonify({"status": "error", "message": "OperatingIncome or Revenue data not found in company_data.csv."}), 404
 
         # Extract numerical values and dates
         # Exclude 'Accounting Variable' column to get only date columns
@@ -156,8 +156,8 @@ def get_operatingmargin(company_data_filepath):
         return jsonify({
             "status": "success",
             "data": {
-                "metric_name": "Net Profit Margin",
-                "graph_data": numeric_opertaing_margins,
+                "metric_name": "Operating Margin",
+                "graph_data": operating_margin_data,
                 "statistics": {
                     "average_margin": round(average_margin, 2),
                     "std_dev_margin": round(std_dev_margin, 2)
@@ -168,5 +168,5 @@ def get_operatingmargin(company_data_filepath):
     except pd.errors.EmptyDataError:
         return jsonify({"status": "error", "message": "company_data.csv is empty."}), 400
     except Exception as e:
-        print(f"Error in get_profitability_netmargin: {e}")
+        print(f"Error in get_profitability_operatingmargin: {e}")
         return jsonify({"status": "error", "message": f"An unexpected error occurred: {str(e)}"}), 500

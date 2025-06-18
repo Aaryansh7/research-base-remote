@@ -12,6 +12,8 @@ from headers.xbrlprocessing import xbrl_data_processor
 
 # Import the new function from src/profitabilityratios.py
 from src.profitabilityratio import get_netmargin, get_operatingmargin
+# Import the new function from src/liquidityratio.py
+from src.liquidityratio import get_currentratio
 
 app = Flask(__name__)
 CORS(app)
@@ -69,16 +71,30 @@ def get_profitability_netmargin():
     return response_data
 
 # API ENDPOINT: Compute Profitability Ratio: GrossProfit
-@app.route('/api/profitability/gross-profit', methods=['GET'])
-def get_profitability_grossprofitmargin():
+@app.route('/api/profitability/operating-margin', methods=['GET'])
+def get_profitability_operatingmargin():
     """
-    Calls the get_grossprofitmargin function from src/profitabilityratios.py
+    Calls the get_operatingmargin function from src/profitabilityratios.py
     and returns its result as a JSON response.
     """
-    print(f"Backend received request for Net Margin and Revenue data.")
+    print(f"Backend received request for Operating Margin and Revenue data.")
     # Call the outsourced function
     response_data = get_operatingmargin(COMPANY_DATA_FILEPATH)
     return response_data
+
+# API ENDPOINT: Compute Liquidity Ratio: Current Ratio
+@app.route('/api/liquidity/current-ratio', methods=['GET'])
+def get_liquidity_currentratio():
+    """
+    Calls the get_currentratio function from src/liquidityratios.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for CurrentRatio.")
+    # Call the outsourced function
+    response_data = get_currentratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
+
 
 if __name__ == '__main__':
     # When running locally, ensure the correct path to headers is in sys.path
