@@ -56,7 +56,7 @@ def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
         'Revenue', 'OperatingIncome', 'Equity(BV)', 'ShortTermDebt(BV)',
         'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', \
         'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',\
-        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities'
+        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities', 'TotalLiability', 'TotalAsset'
     ]
 
     # Get sorted report dates to use as column headers
@@ -384,9 +384,9 @@ def xbrl_data_processor(trailing_data, ticker):
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_debt
 
             # Cash Filling
-            cash = find_latest_tuple_by_string(company_main_list, ["CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"])
+            cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue"])
             if cash is not None:
-                cash = find_latest_tuple_by_string(company_main_list, ["CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"])[1]
+                cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue"])[1]
             else:
                 cash = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Cash'].index
@@ -528,6 +528,30 @@ def xbrl_data_processor(trailing_data, ticker):
             if not row_index.empty:
                 # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = currentliability
+
+            # Total Liability Filling
+            totalliabilityplus_equitybv = find_latest_tuple_by_string(company_main_list, ["LiabilitiesAndStockholdersEquity"])
+            if totalliabilityplus_equitybv is not None:
+                totalliabilityplus_equitybv = find_latest_tuple_by_string(company_main_list, ["LiabilitiesAndStockholdersEquity"])[1]
+            else:
+                totalliabilityplus_equitybv = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalLiability'].index
+
+            if not row_index.empty:
+                # If a matching accounting variable row is found, update the cell
+                initialized_financial_df.at[row_index[0], report_date_str] = totalliabilityplus_equitybv - book_value_equity
+
+            # Total Assets Filling
+            totalassets = find_latest_tuple_by_string(company_main_list, ["Assets"])
+            if totalassets is not None:
+                totalassets = find_latest_tuple_by_string(company_main_list, ["Assets"])[1]
+            else:
+                totalassets = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalAsset'].index
+
+            if not row_index.empty:
+                # If a matching accounting variable row is found, update the cell
+                initialized_financial_df.at[row_index[0], report_date_str] = totalassets
 
     print(initialized_financial_df)
     return initialized_financial_df

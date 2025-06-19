@@ -13,7 +13,9 @@ from headers.xbrlprocessing import xbrl_data_processor
 # Import the new function from src/profitabilityratios.py
 from src.profitabilityratio import get_netmargin, get_operatingmargin
 # Import the new function from src/liquidityratio.py
-from src.liquidityratio import get_currentratio
+from src.liquidityratio import get_currentratio, get_cashratio
+# Import the new function from src/solvencyratio.py
+from src.solvencyratio import get_debtequityratio, get_debtassetratio
 
 app = Flask(__name__)
 CORS(app)
@@ -70,7 +72,7 @@ def get_profitability_netmargin():
     response_data = get_netmargin(COMPANY_DATA_FILEPATH)
     return response_data
 
-# API ENDPOINT: Compute Profitability Ratio: GrossProfit
+# API ENDPOINT: Compute Profitability Ratio: Operating Margin
 @app.route('/api/profitability/operating-margin', methods=['GET'])
 def get_profitability_operatingmargin():
     """
@@ -93,6 +95,43 @@ def get_liquidity_currentratio():
     # Call the outsourced function
     response_data = get_currentratio(COMPANY_DATA_FILEPATH)
     return response_data
+
+# API ENDPOINT: Compute Liquidity Ratio: Cash Ratio
+@app.route('/api/liquidity/cash-ratio', methods=['GET'])
+def get_liquidity_cashratio():
+    """
+    Calls the get_cashratio function from src/liquidityratios.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for CashRatio.")
+    # Call the outsourced function
+    response_data = get_cashratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
+# API ENDPOINT: Compute Solvency Ratio: Debt to Equity Ratio
+@app.route('/api/solvency/debtequity-ratio', methods=['GET'])
+def get_solvency_debtequityratio():
+    """
+    Calls the get_debtequtiyratio function from src/solvencyratio.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for Debt to Equity.")
+    # Call the outsourced function
+    response_data = get_debtequityratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
+# API ENDPOINT: Compute Solvency Ratio: Debt to Asset Ratio
+@app.route('/api/solvency/debtasset-ratio', methods=['GET'])
+def get_solvency_debtassetratio():
+    """
+    Calls the get_debtassetratio function from src/solvencyratio.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for Debt to Asset.")
+    # Call the outsourced function
+    response_data = get_debtassetratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
 
 
 
