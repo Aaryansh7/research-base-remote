@@ -16,21 +16,30 @@ from src.profitabilityratio import get_netmargin, get_operatingmargin
 from src.liquidityratio import get_currentratio, get_cashratio
 # Import the new function from src/solvencyratio.py
 from src.solvencyratio import get_debtequityratio, get_debtassetratio
+# Import the new function from src/efficiencyratio.py
+from src.efficiencyratio import get_inventoryturnoverratio, get_assetturnoverratio
 
 app = Flask(__name__)
 CORS(app)
 
 # Define the path to company_data.csv relative to app.py
-COMPANY_DATA_FILEPATH = 'company_data.csv'
+COMPANY_DATA_DIR = 'data/'
+COMPANY_DATA_FILEPATH = None
+COMPANY_METADATA_FILEPATH = None
 
 # API ENDPOINT: Receive Ticker and Compute Company Data
 @app.route('/api/company-info/<ticker>', methods=['GET'])
 def get_company_info(ticker):
     """
     Receives a company ticker, fetches EDGAR data, processes XBRL,
-    saves it to company_data.csv, and returns a success message.
+    saves it to <ticker>.csv, and returns a success message.
+    Only processes data if new data is more recent than existing data or if no existing data.
     """
     print(f"Backend received request for ticker: {ticker}")
+
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
+    print(f"Using data file: {COMPANY_DATA_FILEPATH}")
 
     try:
         # Step 1: Create an instance of sec_edgar_endpoint
@@ -39,19 +48,58 @@ def get_company_info(ticker):
         reportings_data = edgar_api.main_execution(ticker)
         print(f"Reportings data obtained for {ticker}:\n{reportings_data.head()}")
 
-        # Step 3: Process the financial data using xbrl_data_processor
-        # This function is expected to return a processed pandas DataFrame
-        processed_financial_data = xbrl_data_processor(reportings_data, ticker)
-        print(f"Processed financial data for {ticker}:\n{processed_financial_data.head()}")
+        # Ensure 'reportDate' is in datetime format for proper comparison
+        reportings_data['reportDate'] = pd.to_datetime(reportings_data['reportDate'])
 
-        # Step 4: Save the processed DataFrame to 'company_data.csv'
-        # This CSV will be used by other endpoints to retrieve data
-        processed_financial_data.to_csv('company_data.csv', index=False)
-        print(f"Data for {ticker} saved to company_data.csv")
+        # Get the latest report date from the newly fetched data
+        latest_fetched_date = reportings_data['reportDate'].max()
+        print(f"Latest fetched report date: {latest_fetched_date}")
 
-        # Return a success message. The actual data processing is done
-        # and stored for subsequent calls.
-        return jsonify({"status": "success", "message": "Company's Latest Financial data obtained and saved!", "ticker": ticker})
+        latest_stored_date = None
+        
+        # Check if the ticker-specific CSV exists and load it
+        if os.path.exists(COMPANY_DATA_FILEPATH):
+            try:
+                existing_df = pd.read_csv(COMPANY_DATA_FILEPATH)
+
+                # Identify date columns by excluding 'Accounting Variable'
+                date_columns = [col for col in existing_df.columns if col != 'Accounting Variable']
+                
+                # Convert date column names to datetime objects and find the maximum date
+                if date_columns:
+                    latest_stored_date = pd.to_datetime(date_columns).max()
+                    print(f"Latest stored report date for {ticker}: {latest_stored_date}")
+                else:
+                    print(f"No date columns found in existing file {COMPANY_DATA_FILEPATH}. Will process new data.")
+
+            except pd.errors.EmptyDataError:
+                print(f"Existing file {COMPANY_DATA_FILEPATH} is empty. Will process new data.")
+            except Exception as e:
+                print(f"Error reading existing CSV {COMPANY_DATA_FILEPATH}: {e}. Will process new data.")
+        else:
+            print(f"No existing data file found for {ticker}: {COMPANY_DATA_FILEPATH}")
+
+        # Conditionally process and save data
+        if latest_stored_date is None or latest_fetched_date > latest_stored_date:
+            print("Newer data available or no existing data. Processing financial data...")
+            # Step 3: Process the financial data using xbrl_data_processor
+            processed_financial_data = xbrl_data_processor(reportings_data, ticker)
+            print(f"Processed financial data for {ticker}:\n{processed_financial_data.head()}")
+
+            # Step 4: Save the processed DataFrame to the ticker-specific CSV
+            processed_financial_data.to_csv(COMPANY_DATA_FILEPATH, index=False)
+            print(f"Data for {ticker} saved to {COMPANY_DATA_FILEPATH}")
+
+            message = "Company's Latest Financial data obtained and saved!"
+            if latest_stored_date is None:
+                message = "Company's financial data obtained and saved for the first time."
+            elif latest_fetched_date > latest_stored_date:
+                 message = "Company's financial data updated with more recent information."
+
+            return jsonify({"status": "success", "message": message, "ticker": ticker})
+        else:
+            print("Existing data is already up to date. No new processing needed.")
+            return jsonify({"status": "success", "message": "Company's financial data is already up to date.", "ticker": ticker})
 
     except ValueError as e:
         print(f"ValueError in get_company_info: {e}")
@@ -59,77 +107,118 @@ def get_company_info(ticker):
     except Exception as e:
         print(f"Unexpected error in get_company_info: {e}")
         return jsonify({"status": "error", "message": f"An unexpected error occurred: {str(e)}"}), 500
-
 # API ENDPOINT: Compute Profitability Ratio: NetMargin 
-@app.route('/api/profitability/net-margin', methods=['GET'])
-def get_profitability_netmargin():
+@app.route('/api/profitability/net-margin/<ticker>', methods=['GET'])
+def get_profitability_netmargin(ticker):
     """
     Calls the get_netmargin function from src/profitabilityratios.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for Net Margin and Revenue data.")
     # Call the outsourced function
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
+    #print("File path = ", COMPANY_DATA_FILEPATH)
     response_data = get_netmargin(COMPANY_DATA_FILEPATH)
     return response_data
 
 # API ENDPOINT: Compute Profitability Ratio: Operating Margin
-@app.route('/api/profitability/operating-margin', methods=['GET'])
-def get_profitability_operatingmargin():
+@app.route('/api/profitability/operating-margin/<ticker>', methods=['GET'])
+def get_profitability_operatingmargin(ticker):
     """
     Calls the get_operatingmargin function from src/profitabilityratios.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for Operating Margin and Revenue data.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
     # Call the outsourced function
     response_data = get_operatingmargin(COMPANY_DATA_FILEPATH)
     return response_data
 
 # API ENDPOINT: Compute Liquidity Ratio: Current Ratio
-@app.route('/api/liquidity/current-ratio', methods=['GET'])
-def get_liquidity_currentratio():
+@app.route('/api/liquidity/current-ratio/<ticker>', methods=['GET'])
+def get_liquidity_currentratio(ticker):
     """
     Calls the get_currentratio function from src/liquidityratios.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for CurrentRatio.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
     # Call the outsourced function
     response_data = get_currentratio(COMPANY_DATA_FILEPATH)
     return response_data
 
 # API ENDPOINT: Compute Liquidity Ratio: Cash Ratio
-@app.route('/api/liquidity/cash-ratio', methods=['GET'])
-def get_liquidity_cashratio():
+@app.route('/api/liquidity/cash-ratio/<ticker>', methods=['GET'])
+def get_liquidity_cashratio(ticker):
     """
     Calls the get_cashratio function from src/liquidityratios.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for CashRatio.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
+
     # Call the outsourced function
     response_data = get_cashratio(COMPANY_DATA_FILEPATH)
     return response_data
 
 # API ENDPOINT: Compute Solvency Ratio: Debt to Equity Ratio
-@app.route('/api/solvency/debtequity-ratio', methods=['GET'])
-def get_solvency_debtequityratio():
+@app.route('/api/solvency/debtequity-ratio/<ticker>', methods=['GET'])
+def get_solvency_debtequityratio(ticker):
     """
     Calls the get_debtequtiyratio function from src/solvencyratio.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for Debt to Equity.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
     # Call the outsourced function
     response_data = get_debtequityratio(COMPANY_DATA_FILEPATH)
     return response_data
 
 # API ENDPOINT: Compute Solvency Ratio: Debt to Asset Ratio
-@app.route('/api/solvency/debtasset-ratio', methods=['GET'])
-def get_solvency_debtassetratio():
+@app.route('/api/solvency/debtasset-ratio/<ticker>', methods=['GET'])
+def get_solvency_debtassetratio(ticker):
     """
     Calls the get_debtassetratio function from src/solvencyratio.py
     and returns its result as a JSON response.
     """
     print(f"Backend received request for Debt to Asset.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
     # Call the outsourced function
     response_data = get_debtassetratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
+# API ENDPOINT: Compute Efficiency Ratio: Inventory Turnover
+@app.route('/api/efficiency/inventoryturnover-ratio/<ticker>', methods=['GET'])
+def get_efficiency_inventoryturnoverratio(ticker):
+    """
+    Calls the get_inventoryturnoverratio function from src/efficiencyratio.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for Inventory Tunrover.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
+    # Call the outsourced function
+    response_data = get_inventoryturnoverratio(COMPANY_DATA_FILEPATH)
+    return response_data
+
+# API ENDPOINT: Compute Efficiency Ratio: Asset Turnover
+@app.route('/api/efficiency/assetturnover-ratio/<ticker>', methods=['GET'])
+def get_efficiency_assetturnoverratio(ticker):
+    """
+    Calls the get_assetturnoverratio function from src/efficiencyratio.py
+    and returns its result as a JSON response.
+    """
+    print(f"Backend received request for Asset Tunrover.")
+    # Dynamically set the file path based on the ticker
+    COMPANY_DATA_FILEPATH = os.path.join(COMPANY_DATA_DIR, f'{ticker.lower()}.csv')
+    # Call the outsourced function
+    response_data = get_assetturnoverratio(COMPANY_DATA_FILEPATH)
     return response_data
 
 

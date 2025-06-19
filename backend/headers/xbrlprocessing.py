@@ -56,7 +56,7 @@ def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
         'Revenue', 'OperatingIncome', 'Equity(BV)', 'ShortTermDebt(BV)',
         'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', \
         'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',\
-        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities', 'TotalLiability', 'TotalAsset'
+        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities', 'TotalLiability', 'TotalAsset', 'Inventory'
     ]
 
     # Get sorted report dates to use as column headers
@@ -552,6 +552,18 @@ def xbrl_data_processor(trailing_data, ticker):
             if not row_index.empty:
                 # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = totalassets
+
+            # Inventory Filling
+            inventory = find_latest_tuple_by_string(company_main_list, ["InventoryNet"])
+            if inventory is not None:
+                inventory = find_latest_tuple_by_string(company_main_list, ["InventoryNet"])[1]
+            else:
+                inventory = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Inventory'].index
+
+            if not row_index.empty:
+                # If a matching accounting variable row is found, update the cell
+                initialized_financial_df.at[row_index[0], report_date_str] = inventory
 
     print(initialized_financial_df)
     return initialized_financial_df
