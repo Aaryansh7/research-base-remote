@@ -11,6 +11,7 @@
       "dest": "backend/app.py"
     }
   ],
+  "installCommand": "pip install -r backend/requirements.txt",
   "env": {
     "PYTHONPATH": "backend/" 
   }
