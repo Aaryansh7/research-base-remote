@@ -20,7 +20,7 @@ from src.solvencyratio import get_debtequityratio, get_debtassetratio
 from src.efficiencyratio import get_inventoryturnoverratio, get_assetturnoverratio
 
 app = Flask(__name__)
-CORS(app, origins=["https://effortless-kringle-511233.netlify.app/", "http://localhost:3000"])
+CORS(app, origins=["https://effortless-kringle-511233.netlify.app", "http://localhost:3000"])
 
 # Define the path to company_data.csv relative to app.py
 COMPANY_DATA_DIR = 'data/'
