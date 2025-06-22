@@ -12,6 +12,6 @@
     }
   ],
   "env": {
-    "PYTHONPATH": "backend/" // Add this line
+    "PYTHONPATH": "backend/" 
   }
 }
