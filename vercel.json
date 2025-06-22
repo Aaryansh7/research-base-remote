@@ -1,15 +1,14 @@
 {
   "builds": [
     {
-      "src": "backend/app.py",  // Specify the path to your Flask app file
+      "src": "backend/app.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "backend/app.py" // Route all incoming requests to your Flask app
+      "dest": "backend/app.py"
     }
-  ],
-  "installCommand": "pip install -r backend/requirements.txt"
+  ]
 }
