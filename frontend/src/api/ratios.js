@@ -1,5 +1,5 @@
 // src/api/ratiosApi.js
-const BASE_URL = 'http://127.0.0.1:5000';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 export const fetchNetProfitMargin = async (ticker) => {
     const response = await fetch(`${BASE_URL}/api/profitability/net-margin/${ticker}`);
