@@ -10,5 +10,8 @@
       "src": "/(.*)",
       "dest": "backend/app.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": "backend/" // Add this line
+  }
 }
