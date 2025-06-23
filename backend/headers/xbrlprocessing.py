@@ -9,7 +9,7 @@ import json
 import re
 from datetime import datetime
 
-from s3_utils import write_json_to_s3
+from .s3_utils import write_json_to_s3
 
 # ------ UTILITY FUNCTION --------------------#
 def create_edgar_link(row):
