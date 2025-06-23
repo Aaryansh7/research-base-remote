@@ -248,7 +248,7 @@ def xbrl_data_processor(trailing_data, ticker):
                         "period" in fact_data["dimensions"] and "value" in fact_data):
                     
                     # Check the current fact's dimensions key nums
-                    if len(fact_data["dimensions"]) is not 5:
+                    if len(fact_data["dimensions"]) != 5:
                         continue
 
                     concept_value = fact_data["dimensions"]["concept"]
