@@ -236,4 +236,4 @@ if __name__ == '__main__':
     #     sys.path.insert(0, parent_dir)
 
 
-    app.run(debug=True, port=5000)
+    app.run(port=5000)

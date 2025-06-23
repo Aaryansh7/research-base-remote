@@ -9,6 +9,8 @@ import json
 import re
 from datetime import datetime
 
+from s3_utils import write_json_to_s3
+
 # ------ UTILITY FUNCTION --------------------#
 def create_edgar_link(row):
     cik = row['accessionNumber'].split('-')[0]
@@ -150,18 +152,22 @@ def xbrl_data_processor(trailing_data, ticker):
     logging.basicConfig(level=logging.INFO)
 
     # Setup XBRL cache and parser
+    # Use /tmp for the ephemeral cache directory in serverless environments
+    #xbrl_cache_dir = os.path.join("/tmp", "xbrl_cache")
+    #os.makedirs(xbrl_cache_dir, exist_ok=True) # Ensure the directory exists in /tmp
+    #cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False)
     cache: HttpCache = HttpCache('./xbrl_cache', verify_https=False)
     cache.set_headers({'From': 'YOUR@EMAIL.com', 'User-Agent': 'Company Name AdminContact@<company-domain>.com'})
     parser = XbrlParser(cache)
 
     df = df_cleaned
 
-    # Add a new column to store JSON file paths, initialized with None or empty string
-    df['json_filepath'] = None
+     # Add a new column to store S3 keys (instead of local file paths)
+    df['s3_json_key'] = None
 
-    # Directory to save JSON files
-    output_dir = './xbrl_json_data'
-    os.makedirs(output_dir, exist_ok=True)
+    # Directory to save JSON files  - NO NEED FOR LOCAL output_dir anymore:
+    #output_dir = './xbrl_json_data'
+    #os.makedirs(output_dir, exist_ok=True)
 
     # Iterate over each row in the DataFrame
     for index, row in df.iterrows():
@@ -179,23 +185,32 @@ def xbrl_data_processor(trailing_data, ticker):
                 base_filename = f"unknown_file_{index}"
                 logging.warning(f"Could not extract base filename from URL: {schema_url}. Using '{base_filename}'.")
 
-            filename = f"{base_filename}.json"
-            filepath = os.path.join(output_dir, filename)
+            # Define the S3 key
+            s3_key = f"xbrl_json_data/{base_filename}.json" # Example S3 path structure
+
+            #filename = f"{base_filename}.json"
+            #filepath = os.path.join(output_dir, filename)
 
             # Save to file
-            inst.json(filepath)
-            logging.info(f"Successfully saved XBRL JSON to: {filepath}")
+            #inst.json(filepath)
+            xbrl_json_data = inst.json()
+            data_dict = json.loads(xbrl_json_data)
 
-            # Update the DataFrame with the JSON file path
-            df.at[index, 'json_filepath'] = filepath
+            write_json_to_s3(
+                data=data_dict,
+                file_key=s3_key,
+            )
+            logging.info("Successfully uploaded XBRL JSON to s3:")
+
+             # Update the DataFrame with the S3 key
+            df.at[index, 's3_json_key'] = s3_key
 
         except Exception as e:
-            logging.error(f"Error processing {schema_url}: {e}")
-            # Optionally, mark the path as an error or None if processing failed
-            df.at[index, 'json_filepath'] = f"ERROR: {e}"
+            logging.error(f"Error processing and uploading {schema_url}: {e}")
+            df.at[index, 's3_json_key'] = f"ERROR: {e}"
 
-    print(f"\nAll XBRL instances processed. JSON files are saved in the '{output_dir}' directory.")
-    print("\nUpdated DataFrame with JSON file paths:")
+    print(f"\nAll XBRL instances processed. JSON files are uploaded to S3.")
+    print("\nUpdated DataFrame with S3 JSON keys:")
     print(df)
 
 # --- END: Dummy DataFrame Creation and Initial JSON Generation ---
