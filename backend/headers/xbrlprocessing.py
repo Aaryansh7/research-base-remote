@@ -224,7 +224,7 @@ def xbrl_data_processor(trailing_data, ticker):
     logging.info("--- Extracting facts from generated JSON files ---")
     for index, row in df.iterrows():
         company_main_list = []
-        json_filepath = row['json_filepath']
+        json_filepath = row['s3_json_key']
         ticker = row['ticker'] # Optionally carry ticker information
         report_date = row['reportDate']
 
