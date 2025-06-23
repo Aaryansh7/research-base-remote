@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 
 
 # Debt to Equity Ratio
-def get_debtequityratio(company_data_filepath):
+def get_debtequityratio(df):
     """
     Reads company_data.csv, extracts Total Liability and Total Equity(BV) data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -14,14 +14,6 @@ def get_debtequityratio(company_data_filepath):
     print(f"Backend received request for Debt to Equity Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'TotalLiability' and 'Equity(BV)'
@@ -92,7 +84,7 @@ def get_debtequityratio(company_data_filepath):
 
 
 # Debt to Asset Ratio
-def get_debtassetratio(company_data_filepath):
+def get_debtassetratio(df):
     """
     Reads company_data.csv, extracts Total Liability and Total Assets data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -100,14 +92,6 @@ def get_debtassetratio(company_data_filepath):
     print(f"Backend received request for Debt to Asset Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'TotalLiability' and 'Equity(BV)'

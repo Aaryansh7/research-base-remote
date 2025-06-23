@@ -4,7 +4,7 @@ import sys # Import sys for path manipulation
 from datetime import datetime
 from flask import Flask, jsonify, request
 
-def get_inventoryturnoverratio(company_data_filepath):
+def get_inventoryturnoverratio(df):
     """
     Reads company_data.csv, extracts Inventory and Revenue data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -12,11 +12,6 @@ def get_inventoryturnoverratio(company_data_filepath):
     print(f"Backend received request for Inventory Turnover Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'Inventory' and 'Revenue'
@@ -103,7 +98,7 @@ def get_inventoryturnoverratio(company_data_filepath):
 
 
 # Asset Turnover
-def get_assetturnoverratio(company_data_filepath):
+def get_assetturnoverratio(df):
     """
     Reads company_data.csv, extracts Assets and Revenue data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -111,11 +106,6 @@ def get_assetturnoverratio(company_data_filepath):
     print(f"Backend received request for Asset Turnover Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'Asset' and 'Revenue'

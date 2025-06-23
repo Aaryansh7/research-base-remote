@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 
 
 # NET MARGIN
-def get_netmargin(company_data_filepath):
+def get_netmargin(df):
     """
     Reads company_data.csv, extracts Revenue and NetIncome data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -14,14 +14,6 @@ def get_netmargin(company_data_filepath):
     print(f"Backend received request for Net Margin and Revenue data.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'NetIncome' and 'Revenue'
@@ -91,7 +83,7 @@ def get_netmargin(company_data_filepath):
     
 
 # OPERATING MARGIN
-def get_operatingmargin(company_data_filepath):
+def get_operatingmargin(df):
     """
     Reads company_data.csv, extracts Revenue and Operating income data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -99,11 +91,6 @@ def get_operatingmargin(company_data_filepath):
     print(f"Backend received request for Operating Income and Revenue data.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'OperatingIncome' and 'Revenue'

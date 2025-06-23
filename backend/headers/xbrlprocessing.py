@@ -9,7 +9,7 @@ import json
 import re
 from datetime import datetime
 
-from .s3_utils import write_json_to_s3
+from .s3_utils import write_json_to_s3, read_json_from_s3
 
 # ------ UTILITY FUNCTION --------------------#
 def create_edgar_link(row):
@@ -224,22 +224,22 @@ def xbrl_data_processor(trailing_data, ticker):
     logging.info("--- Extracting facts from generated JSON files ---")
     for index, row in df.iterrows():
         company_main_list = []
-        json_filepath = row['s3_json_key']
+        s3_json_filepath = row['s3_json_key']
         ticker = row['ticker'] # Optionally carry ticker information
         report_date = row['reportDate']
 
         # Skip if the file path is an error or None
-        if not json_filepath or "ERROR" in json_filepath:
-            logging.warning(f"Skipping row {index} due to invalid JSON filepath: {json_filepath}")
+        if not s3_json_filepath or "ERROR" in s3_json_filepath:
+            logging.warning(f"Skipping row {index} due to invalid JSON filepath: {s3_json_filepath}")
             continue
 
         try:
-            logging.info(f"Loading and processing facts from JSON file: {json_filepath}")
-            with open(json_filepath, 'r') as f:
-                data = json.load(f)
+            # Read JSON directly from S3 using your s3_utils function
+            # Make sure read_json_from_s3 function takes s3_bucket_name as well
+            data = read_json_from_s3(file_key=s3_json_filepath)
 
             if "facts" not in data:
-                logging.warning(f"No 'facts' key found in JSON file: {json_filepath}")
+                logging.warning(f"No 'facts' key found in JSON file: {s3_json_filepath}")
                 continue
 
             for fact_key, fact_data in data["facts"].items():
@@ -260,7 +260,7 @@ def xbrl_data_processor(trailing_data, ticker):
                         # It's a range, take the second part (end date)
                         parts = period_value.split('/')
                         if len(parts) != 2:
-                            raise ValueError(f"Invalid range format for period '{period_value}' in '{json_filepath}'. Expected 'start/end'.")
+                            raise ValueError(f"Invalid range format for period '{period_value}' in '{s3_json_filepath}'. Expected 'start/end'.")
                         date_str = parts[1]
                     else:
                         # It's a single datetime
@@ -270,18 +270,18 @@ def xbrl_data_processor(trailing_data, ticker):
                     try:
                         period_datetime = datetime.fromisoformat(date_str)
                     except ValueError as ve:
-                        logging.warning(f"Could not parse date '{date_str}' from '{json_filepath}' for concept '{concept_value}': {ve}. Skipping this fact.")
+                        logging.warning(f"Could not parse date '{date_str}' from '{s3_json_filepath}' for concept '{concept_value}': {ve}. Skipping this fact.")
                         continue
 
                     company_main_list.append((concept_value, actual_value, datetime.fromisoformat(date_str)))
             all_extracted_facts[report_date] = company_main_list
 
         except FileNotFoundError:
-            logging.error(f"JSON file not found: {json_filepath}. Skipping.")
+            logging.error(f"JSON file not found: {s3_json_filepath}. Skipping.")
         except json.JSONDecodeError as e:
-            logging.error(f"Error decoding JSON from file: {json_filepath}: {e}. Skipping.")
+            logging.error(f"Error decoding JSON from file: {s3_json_filepath}: {e}. Skipping.")
         except Exception as e:
-            logging.error(f"An unexpected error occurred while processing {json_filepath}: {e}. Skipping.")
+            logging.error(f"An unexpected error occurred while processing {s3_json_filepath}: {e}. Skipping.")
 
     print(f"\n--- Fact Extraction Complete ---")
     print(f"Total facts extracted from all JSON files: {len(all_extracted_facts)}")

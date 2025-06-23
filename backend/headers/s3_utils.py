@@ -3,10 +3,19 @@ import boto3
 import json
 from io import StringIO, BytesIO
 import os
+from dotenv import load_dotenv # Import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize a global S3 client. Boto3 will automatically pick up AWS credentials
 S3_REGION = os.environ.get('AWS_REGION', 'us-east-1') # Default to us-east-1 if not set
-s3_client = boto3.client('s3', region_name=S3_REGION)
+CONFIG = boto3.session.Config(
+    connect_timeout=300,  # 5 minutes for connection establishment
+    read_timeout=300,     # 5 minutes for reading data
+    retries={'max_attempts': 10} # Increase max retry attempts
+)
+s3_client = boto3.client('s3', region_name=S3_REGION, config=CONFIG, verify=False)
 
 def _get_s3_bucket_name(bucket_name: str = None) -> str:
     """

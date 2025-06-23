@@ -6,7 +6,7 @@ from flask import Flask, jsonify, request
 
 
 # Current Ratio
-def get_currentratio(company_data_filepath):
+def get_currentratio(df):
     """
     Reads company_data.csv, extracts CurrentAssets and CurrentLiabilities data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -14,14 +14,6 @@ def get_currentratio(company_data_filepath):
     print(f"Backend received request for Current Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'CurrentAssets' and 'CurrentLiabilities'
@@ -92,7 +84,7 @@ def get_currentratio(company_data_filepath):
 
 
 # Cash Ratio
-def get_cashratio(company_data_filepath):
+def get_cashratio(df):
     """
     Reads company_data.csv, extracts Cash and CurrentLiabilities data, calculates basic statistics (Avg, Std Dev),
     and prepares data for a graph.
@@ -100,14 +92,6 @@ def get_cashratio(company_data_filepath):
     print(f"Backend received request for Cash Ratio.")
 
     try:
-        # Ensure company_data.csv exists before attempting to read
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        if not os.path.exists(company_data_filepath):
-            return jsonify({"status": "error", "message": "company_data.csv not found. Please select a company first to generate the data."}), 404
-
-        df = pd.read_csv(company_data_filepath)
         print("df = ", df)
 
         # Find the rows for 'Cash' and 'CurrentLiabilities'
