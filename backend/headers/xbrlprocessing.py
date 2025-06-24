@@ -11,101 +11,103 @@ from datetime import datetime
 
 from .s3_utils import write_json_to_s3, read_json_from_s3
 
-# ------ UTILITY FUNCTION --------------------#
-def create_edgar_link(row):
-    cik = row['accessionNumber'].split('-')[0]
+# Suppress InsecureRequestWarning
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# ------ UTILITY FUNCTIONS --------------------#
+
+def generate_edgar_link_candidates(row, cik_original):
+    """
+    Generates a list of potential EDGAR XBRL instance HTML links
+    based on different CIK and filename formatting conventions.
+    """
     accession_no_dashes = row['accessionNumber'].replace('-', '')
     formatted_date = row['reportDate'].strftime('%Y%m%d')
-    ticker = row['ticker'] # Use the ticker from the DataFrame
+    ticker = row['ticker']
 
-    # For the htm file name, typically it's ticker-YYYYMMDD.htm or just CIK-YYYYMMDD.htm
-    # The example given uses ticker-YYYYMMDD.htm, which is common for 10-K/Q.
-    htm_filename = f"{ticker}-{formatted_date}.htm"
+    cik_variations = [
+        cik_original,
+        cik_original.lstrip('0') # CIK with leading zeros removed
+    ]
 
-    return f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession_no_dashes}/{htm_filename}"
+    htm_filename_variations = [
+        f"{ticker}-{formatted_date}.htm",
+    ]
+    # Add other variations if you discover them, e.g., CIK-based filename:
+    # f"{cik_original}-{formatted_date}.htm"
+    # f"{cik_original.lstrip('0')}-{formatted_date}.htm"
 
+    candidate_urls = []
+    for current_cik in cik_variations:
+        for htm_filename in htm_filename_variations:
+            url = f"https://www.sec.gov/Archives/edgar/data/{current_cik}/{accession_no_dashes}/{htm_filename}"
+            candidate_urls.append(url)
+            
+    # Add the "old-style" link from the accession number directly, often ends in .txt or .xml but can be .htm
+    # This variation assumes the accession number itself is part of the path, not just the file name suffix.
+    # This is often for the index.htm or main document itself.
+    # It might already be covered by the edgarAPI or if accessionNumber.htm format works.
+    # For a full XBRL instance, it's typically a specific .htm file.
+    # Example: https://www.sec.gov/Archives/edgar/data/320193/000032019323000077/aapl-20230930.htm
+    # The existing logic should generally cover the common formats.
+    # The primary issue is typically the CIK formatting and filename variations.
 
-def check_link(url):
+    print(candidate_urls)
+    return candidate_urls
+
+def check_multiple_links(urls):
     """
-    Checks if a given URL is accessible.
-    Returns True if the link is working (status code 200), False otherwise.
-    Includes a User-Agent header to avoid being blocked by SEC.
+    Checks a list of URLs and returns a list of URLs that return a 200 status code.
     """
-    try:
-        headers = {'User-Agent': 'YourCompanyName YourEmail@example.com'} # Replace with your info
-        response = requests.head(url, allow_redirects=True, timeout=5, headers=headers, verify=False)
-        return response.status_code == 200
-    except requests.exceptions.RequestException as e:
-        # print(f"Error checking {url}: {e}") # Uncomment for debugging
-        return False
+    working_links = []
+    headers = {'User-Agent': 'YourCompanyName YourEmail@example.com'} # Replace with your info
     
+    for url in urls:
+        try:
+            response = requests.head(url, allow_redirects=True, timeout=10, headers=headers, verify=False)
+            if response.status_code == 200:
+                working_links.append(url)
+        except requests.exceptions.RequestException:
+            # print(f"Link failed: {url} - {e}") # Uncomment for deeper debugging
+            pass # Just move to the next URL if there's an error
+    return working_links
 
 def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
-    """
-    Creates a new Pandas DataFrame with accounting variables as the first column
-    and report dates (keys from all_extracted_facts_dict) as subsequent columns,
-    initialized with zeros.
-
-    Args:
-        all_extracted_facts_dict (dict): A dictionary where keys are report dates
-                                         and values are lists of (concept, value, period) tuples.
-
-    Returns:
-        pandas.DataFrame: The newly created DataFrame.
-    """
-
+    # ... (no change, already in your code) ...
     financial_accounting_variables = [
         'Revenue', 'OperatingIncome', 'Equity(BV)', 'ShortTermDebt(BV)',
-        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', \
-        'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',\
+        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', 
+        'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',
         'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities', 'TotalLiability', 'TotalAsset', 'Inventory'
     ]
 
-    # Get sorted report dates to use as column headers
-    # Ensure dates are in a display-friendly string format for columns
     sorted_report_dates = sorted(all_extracted_facts_dict.keys())
     date_columns = [date.strftime('%Y-%m-%d') for date in sorted_report_dates]
 
-    # Define the columns for the new DataFrame
     columns = ["Accounting Variable"] + date_columns
 
-    # Create an empty DataFrame
     new_df = pd.DataFrame(columns=columns)
 
-    # Populate the "Accounting Variable" column and initialize other cells to zero
     for var in financial_accounting_variables:
         row_data = {"Accounting Variable": var}
         for col_date_str in date_columns:
-            row_data[col_date_str] = 0 # Initialize with 0
+            row_data[col_date_str] = 0
         new_df = pd.concat([new_df, pd.DataFrame([row_data])], ignore_index=True)
 
     return new_df
 
-
 def find_latest_tuple_by_string(data_list, search_string_list):
-    """
-    Iterates over a list of (string, numeric, datetime) tuples
-    and finds the tuple with the greatest datetime for a given string.
-
-    Args:
-        data_list (list): A list of tuples, where each tuple is
-                          (str_value, num_value, datetime_object).
-        mode : The Accounting item to be looked for
-        ticker: Company code
-
-    Returns:
-        tuple or None: The tuple with the matching accounting item and the latest datetime,
-                       or None if no matching tuple is found.
-    """
+    # ... (no change, already in your code) ...
     search_string = None
 
     for search_element in search_string_list:
         for main_tuple in data_list:
             if search_element == main_tuple[0]:
                 search_string = search_element
-                break  # Found a match, so break out of the inner loop
-        if search_string:  # If search_string is no longer None, a match was found
-                break      # Break out of the outer loop as well
+                break
+        if search_string:
+                break
 
     latest_tuple = None
     
@@ -114,12 +116,8 @@ def find_latest_tuple_by_string(data_list, search_string_list):
 
         if str_value == search_string:
             if latest_tuple is None:
-                # First matching tuple found
                 latest_tuple = current_tuple
             else:
-                # Compare datetimes if a matching tuple already exists
-                # We need to compare the datetime part of the current_tuple
-                # with the datetime part of the latest_tuple found so far.
                 _, _, latest_dt_object = latest_tuple 
                 if dt_object > latest_dt_object:
                     latest_tuple = current_tuple
@@ -128,56 +126,63 @@ def find_latest_tuple_by_string(data_list, search_string_list):
 
 
 # ------------ MAIN DATA PROCESSING FUNCTION ------------------------#
-def xbrl_data_processor(trailing_data, ticker):
+def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None):
     company_ticker = ticker
     trailing_data['reportDate'] = pd.to_datetime(trailing_data['reportDate'])
     trailing_data['ticker'] = ticker.lower()
-    trailing_data['edgar_link'] = trailing_data.apply(create_edgar_link, axis=1)
+    
+    # --- MODIFICATION START ---
+    # Generate ALL possible link candidates for each row
+    print("Generating EDGAR link candidates...")
+    trailing_data['edgar_link_candidates'] = trailing_data.apply(
+        lambda row: generate_edgar_link_candidates(row, cik_original), axis=1
+    )
+    
+    # Use tqdm for progress when checking links
+    tqdm.pandas(desc="Checking EDGAR links")
+    # Check each set of candidates and get a list of working links
+    trailing_data['working_edgar_links'] = trailing_data['edgar_link_candidates'].progress_apply(check_multiple_links)
 
-    # Apply the check_link function to the 'edgar_link' column
-    # Using tqdm for a progress bar, which is helpful for many links
-    tqdm.pandas() # Initialize tqdm for pandas apply
-    trailing_data['link_working'] = trailing_data['edgar_link'].progress_apply(check_link)
+    # From the list of working links, take the first one found (or None if list is empty)
+    # This will be the definitive link used for parsing
+    trailing_data['edgar_link'] = trailing_data['working_edgar_links'].apply(lambda x: x[0] if x else None)
 
-    # Filter out rows where 'link_working' is False
-    df_cleaned = trailing_data[trailing_data['link_working']].copy()
+    # Filter out rows where no working link was found
+    df_cleaned = trailing_data[trailing_data['edgar_link'].notna()].copy()
 
-    # Drop the temporary 'link_working' column if you don't need it
-    df_cleaned = df_cleaned.drop(columns=['link_working'])
+    # Drop temporary columns if you don't need them
+    df_cleaned = df_cleaned.drop(columns=['edgar_link_candidates', 'working_edgar_links'])
+    # --- MODIFICATION END ---
 
     print("Original DataFrame size:", len(trailing_data))
     print("Cleaned DataFrame size (after removing broken links):", len(df_cleaned))
 
-    # Configure logging
     logging.basicConfig(level=logging.INFO)
 
-    # Setup XBRL cache and parser
-    # Use /tmp for the ephemeral cache directory in serverless environments
-    #xbrl_cache_dir = os.path.join("/tmp", "xbrl_cache")
-    #os.makedirs(xbrl_cache_dir, exist_ok=True) # Ensure the directory exists in /tmp
-    #cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False)
-    cache: HttpCache = HttpCache('./xbrl_cache', verify_https=False)
+    xbrl_cache_dir = os.path.join("/tmp", "xbrl_cache")
+    os.makedirs(xbrl_cache_dir, exist_ok=True)
+    cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False) # Keep verify=False here for SEC connections
+    
     cache.set_headers({'From': 'YOUR@EMAIL.com', 'User-Agent': 'Company Name AdminContact@<company-domain>.com'})
     parser = XbrlParser(cache)
 
     df = df_cleaned
 
-     # Add a new column to store S3 keys (instead of local file paths)
     df['s3_json_key'] = None
-
-    # Directory to save JSON files  - NO NEED FOR LOCAL output_dir anymore:
-    #output_dir = './xbrl_json_data'
-    #os.makedirs(output_dir, exist_ok=True)
 
     # Iterate over each row in the DataFrame
     for index, row in df.iterrows():
-        schema_url = row['edgar_link']
+        schema_url = row['edgar_link'] # This is now guaranteed to be a working link (or skipped)
+
+        if schema_url is None: # Double check, though the filter above should handle it
+            logging.warning(f"Skipping row {index} as no working EDGAR link was found.")
+            df.at[index, 's3_json_key'] = "ERROR: No working EDGAR link"
+            continue
 
         try:
             logging.info(f"Processing XBRL instance from: {schema_url}")
             inst: XbrlInstance = parser.parse_instance(schema_url)
 
-            # Extract the last keyword from the URL for the filename
             match = re.search(r'/([^/]+)\.htm$', schema_url)
             if match:
                 base_filename = match.group(1)
@@ -185,24 +190,18 @@ def xbrl_data_processor(trailing_data, ticker):
                 base_filename = f"unknown_file_{index}"
                 logging.warning(f"Could not extract base filename from URL: {schema_url}. Using '{base_filename}'.")
 
-            # Define the S3 key
-            s3_key = f"xbrl_json_data/{base_filename}.json" # Example S3 path structure
+            s3_key = f"xbrl_json_data/{base_filename}.json" 
 
-            #filename = f"{base_filename}.json"
-            #filepath = os.path.join(output_dir, filename)
-
-            # Save to file
-            #inst.json(filepath)
             xbrl_json_data = inst.json()
             data_dict = json.loads(xbrl_json_data)
 
             write_json_to_s3(
                 data=data_dict,
                 file_key=s3_key,
+                bucket_name=s3_bucket_name
             )
-            logging.info("Successfully uploaded XBRL JSON to s3:")
+            logging.info(f"Successfully uploaded XBRL JSON to s3://{s3_bucket_name}/{s3_key}")
 
-             # Update the DataFrame with the S3 key
             df.at[index, 's3_json_key'] = s3_key
 
         except Exception as e:
@@ -213,41 +212,30 @@ def xbrl_data_processor(trailing_data, ticker):
     print("\nUpdated DataFrame with S3 JSON keys:")
     print(df)
 
-# --- END: Dummy DataFrame Creation and Initial JSON Generation ---
-
-
-# --- START: Iterating over JSON files and extracting facts ---
-
-# This list will store all extracted fact dictionaries from all JSON files
     all_extracted_facts = {}
 
-    logging.info("--- Extracting facts from generated JSON files ---")
+    logging.info("--- Extracting facts from S3-backed JSON files ---")
     for index, row in df.iterrows():
         company_main_list = []
-        s3_json_filepath = row['s3_json_key']
-        ticker = row['ticker'] # Optionally carry ticker information
+        current_s3_json_key = row['s3_json_key'] 
+        ticker = row['ticker']
         report_date = row['reportDate']
 
-        # Skip if the file path is an error or None
-        if not s3_json_filepath or "ERROR" in s3_json_filepath:
-            logging.warning(f"Skipping row {index} due to invalid JSON filepath: {s3_json_filepath}")
+        if not current_s3_json_key or "ERROR" in current_s3_json_key:
+            logging.warning(f"Skipping row {index} due to invalid JSON filepath: {current_s3_json_key}")
             continue
 
         try:
-            # Read JSON directly from S3 using your s3_utils function
-            # Make sure read_json_from_s3 function takes s3_bucket_name as well
-            data = read_json_from_s3(file_key=s3_json_filepath)
+            data = read_json_from_s3(file_key=current_s3_json_key, bucket_name=s3_bucket_name)
 
             if "facts" not in data:
-                logging.warning(f"No 'facts' key found in JSON file: {s3_json_filepath}")
+                logging.warning(f"No 'facts' key found in JSON file: {current_s3_json_key}")
                 continue
 
             for fact_key, fact_data in data["facts"].items():
-                # Ensure necessary keys exist before accessing
                 if ("dimensions" in fact_data and "concept" in fact_data["dimensions"] and
                         "period" in fact_data["dimensions"] and "value" in fact_data):
                     
-                    # Check the current fact's dimensions key nums
                     if len(fact_data["dimensions"]) != 5:
                         continue
 
@@ -257,58 +245,48 @@ def xbrl_data_processor(trailing_data, ticker):
 
                     date_str = ""
                     if '/' in period_value:
-                        # It's a range, take the second part (end date)
                         parts = period_value.split('/')
                         if len(parts) != 2:
-                            raise ValueError(f"Invalid range format for period '{period_value}' in '{s3_json_filepath}'. Expected 'start/end'.")
+                            raise ValueError(f"Invalid range format for period '{period_value}' in '{current_s3_json_key}'. Expected 'start/end'.")
                         date_str = parts[1]
                     else:
-                        # It's a single datetime
                         date_str = period_value
                 
-                    # Convert date string to datetime object
                     try:
                         period_datetime = datetime.fromisoformat(date_str)
                     except ValueError as ve:
-                        logging.warning(f"Could not parse date '{date_str}' from '{s3_json_filepath}' for concept '{concept_value}': {ve}. Skipping this fact.")
+                        logging.warning(f"Could not parse date '{date_str}' from '{current_s3_json_key}' for concept '{concept_value}': {ve}. Skipping this fact.")
                         continue
 
                     company_main_list.append((concept_value, actual_value, datetime.fromisoformat(date_str)))
             all_extracted_facts[report_date] = company_main_list
 
         except FileNotFoundError:
-            logging.error(f"JSON file not found: {s3_json_filepath}. Skipping.")
+            logging.error(f"JSON file not found: {current_s3_json_key}. Skipping.")
         except json.JSONDecodeError as e:
-            logging.error(f"Error decoding JSON from file: {s3_json_filepath}: {e}. Skipping.")
+            logging.error(f"Error decoding JSON from file: {current_s3_json_key}: {e}. Skipping.")
         except Exception as e:
-            logging.error(f"An unexpected error occurred while processing {s3_json_filepath}: {e}. Skipping.")
+            logging.error(f"An unexpected error occurred while processing {current_s3_json_key}: {e}. Skipping.")
 
     print(f"\n--- Fact Extraction Complete ---")
     print(f"Total facts extracted from all JSON files: {len(all_extracted_facts)}")
 
-    # Get a view of the keys
     keys_view = all_extracted_facts.keys()
     print(f"Using .keys(): {keys_view}")
 
 
-# ----------- Creating Financial Compnay Database --------------# 
+# ----------- Creating Financial Company Database --------------# 
 
-    # Call the function to create the DataFrame
     initialized_financial_df = create_initialized_financial_dataframe_by_date(all_extracted_facts)
 
-    # Print the new DataFrame
     print("\nNew Initialized Financial DataFrame:")
     print(initialized_financial_df)
 
-    # 2. Populate the DataFrame
     print("\n--- Populating DataFrame with extracted facts ---")
 
     for report_date_dt, company_main_list in all_extracted_facts.items():
-        # Convert the datetime object key to the string format used in DataFrame columns
         report_date_str = report_date_dt.strftime('%Y-%m-%d')
-        #print(report_date_str)
 
-        # Check if this date column exists in the DataFrame
         if report_date_str in initialized_financial_df.columns:
             # Revenue Filling 
             revenue = find_latest_tuple_by_string(company_main_list, ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax"])
@@ -319,7 +297,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Revenue'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = revenue
             
             # Operating Income Filling 
@@ -331,7 +308,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'OperatingIncome'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = operating_income
 
             # Equity(Book Value) Filling 
@@ -343,7 +319,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Equity(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_equity
 
             # ShortTermDebt(Book Value) Filling
@@ -355,7 +330,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'ShortTermDebt(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_shortterm_debt
 
             # LongTermDebt without lease (Book Value) Filling
@@ -367,7 +341,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermDebtWithoutLease(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_longtermdebt_withoutlease
 
             # LongTermLease(Book Value) Filling
@@ -379,7 +352,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermLease(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_longterm_lease
 
             # LongTerm Debt(BV) Filling
@@ -387,7 +359,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermDebt(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_longtermdebt
 
             # Debt(BV) Filling
@@ -395,7 +366,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Debt(BV)'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_debt
 
             # Cash Filling
@@ -407,7 +377,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Cash'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = cash
 
             # Tax Filling
@@ -419,7 +388,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Tax'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = tax
 
             # Lease Values
@@ -432,7 +400,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueThisYear'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_thisyear
 
             # Year One (Lease)
@@ -444,7 +411,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearOne'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_yearone
 
             # Year Two (Lease)
@@ -456,7 +422,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearTwo'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_yeartwo
 
             # Year Three (Lease)
@@ -468,7 +433,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearThree'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_yearthree
 
             # Year Four (Lease)
@@ -480,7 +444,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearFour'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_yearfour
 
             # Year Five (Lease)
@@ -492,7 +455,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearFive'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_yearfive
 
             # Year After Five (Lease)
@@ -504,7 +466,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueAfterYearFive'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = lease_afteryearfive
 
 
@@ -517,7 +478,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'NetIncome'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = netincome
 
             # Current Assets Filling
@@ -529,7 +489,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentAssets'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = currentasset
 
             # Current Liabilities Filling
@@ -541,7 +500,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentLiabilities'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = currentliability
 
             # Total Liability Filling
@@ -553,7 +511,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalLiability'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = totalliabilityplus_equitybv - book_value_equity
 
             # Total Assets Filling
@@ -565,7 +522,6 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalAsset'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = totalassets
 
             # Inventory Filling
@@ -577,11 +533,9 @@ def xbrl_data_processor(trailing_data, ticker):
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Inventory'].index
 
             if not row_index.empty:
-                # If a matching accounting variable row is found, update the cell
                 initialized_financial_df.at[row_index[0], report_date_str] = inventory
 
     print(initialized_financial_df)
     return initialized_financial_df
     #initialized_financial_df.to_csv('company_data.csv', index=False)
     #df_cleaned.to_csv('company_meta_data.csv', index=False)
-

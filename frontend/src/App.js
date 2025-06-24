@@ -30,7 +30,7 @@ function App() {
     {"name": "Apple Inc.", "ticker": "AAPL"},
     {"name": "Microsoft Corp.", "ticker": "MSFT"},
     {"name": "Amazon.com Inc.", "ticker": "AMZN"},
-    {"name": "Alphabet Inc.", "ticker": "GOOGL"},
+    {"name": "Alphabet Inc.", "ticker": "GOOG"},
     {"name": "NVIDIA Corp.", "ticker": "NVDA"},
     {"name": "Meta Platforms Inc.", "ticker": "META"},
     {"name": "Tesla Inc.", "ticker": "TSLA"},

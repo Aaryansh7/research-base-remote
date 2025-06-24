@@ -4,10 +4,11 @@ import pandas as pd
 import os
 import sys # Import sys for path manipulation
 from datetime import datetime
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Import load_dotenv to load environment variables from .env file
 from dotenv import load_dotenv
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -60,7 +61,7 @@ def get_company_info(ticker):
         # Step 1: Create an instance of sec_edgar_endpoint
         edgar_api = sec_edgar_endpoint()
         # Step 2: Call the main_execution function to get reporting data
-        reportings_data = edgar_api.main_execution(ticker)
+        reportings_data, cik = edgar_api.main_execution(ticker)
         print(f"Reportings data obtained for {ticker}:\n{reportings_data.head()}")
 
         # Ensure 'reportDate' is in datetime format for proper comparison
@@ -68,7 +69,7 @@ def get_company_info(ticker):
 
         # Get the latest report date from the newly fetched data
         latest_fetched_date = reportings_data['reportDate'].max()
-        print(f"Latest fetched report date: {latest_fetched_date}")
+        print(f"Latest fetched report date from accessionNumber datatable: {latest_fetched_date}")
 
         latest_stored_date = None
         
@@ -98,7 +99,7 @@ def get_company_info(ticker):
             print("Newer data available or no existing data. Processing financial data...")
             # Step 3: Process the financial data using xbrl_data_processor
             # Ensure xbrl_data_processor handles S3 writes (as per previous modifications)
-            processed_financial_data = xbrl_data_processor(reportings_data, ticker)
+            processed_financial_data = xbrl_data_processor(reportings_data, ticker, cik)
             print(f"Processed financial data for {ticker}:\n{processed_financial_data.head()}")
 
             # Step 4: Save the processed DataFrame to S3

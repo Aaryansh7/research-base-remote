@@ -28,9 +28,11 @@ class sec_edgar_endpoint:
     def get_filtered_filings_data(self):
         # Returns only rows with form 10-K or 10-Q
         self.only_filings_df = pd.DataFrame(self.company_submission_data['filings']['recent'])
+        print(self.only_filings_df)
         self.filtered_filings_df = self.only_filings_df[(self.only_filings_df['form'] == '10-K') |( self.only_filings_df['form'] == '10-Q')]
         self.filtered_filings_df = self.filtered_filings_df[['accessionNumber', 'reportDate', 'form']]
         self.filtered_filings_df = self.filtered_filings_df.reset_index(drop=True)
+        print(self.filtered_filings_df)
         
         return self.filtered_filings_df
     
@@ -42,6 +44,7 @@ class sec_edgar_endpoint:
         for index, row in self.filtered_filings_df.iterrows():
             if row['form'] == '10-K':
                 count = count+1
+                first_10k_index = index_count
                 if count == 2:
                     first_10k_index = index_count
                     break
@@ -62,8 +65,9 @@ class sec_edgar_endpoint:
         
     def main_execution(self, ticker):
         cik = self.get_cik_matching_ticker(ticker)
+        print("cik = ", cik)
         data = self.get_submission_data()
         filtered_filings = self.get_filtered_filings_data()
         trailing_data = self.get_trailing_data()
         
-        return trailing_data
+        return trailing_data, cik
