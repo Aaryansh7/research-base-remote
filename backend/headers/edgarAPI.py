@@ -1,17 +1,40 @@
 import requests
 import pandas as pd
-from xbrl.cache import HttpCache
-from xbrl.instance import XbrlParser, XbrlInstance
-
+import warnings
+import json # Import json for explicit parsing
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+import time # For rate limiting, if not already implemented
 
 class sec_edgar_endpoint:
+    # ... (existing __init__ with session, headers, and rate limiting logic) ...
     def __init__(self):
-        self.headers = {"User-Agent": 'picdude001@gmail.com'}
+        self.headers = {"User-Agent": 'FinancialDataValidator/1.0 (contact@example.com)'}
+        # Create a session for connection pooling
+        self.session = requests.Session()
+        self.session.headers.update(self.headers)
 
     def get_cik_matching_ticker(self, ticker):
+        self._apply_rate_limit() # Ensure rate limit is applied
         ticker = ticker.upper().replace(".", "-")
         self.ticker = ticker
-        ticker_json = requests.get("https://www.sec.gov/files/company_tickers.json", headers=self.headers, verify=False).json()
+        
+        # DEBUGGING CHANGE START
+        print(f"Fetching company_tickers.json for {self.ticker}...")
+        response = self.session.get("https://www.sec.gov/files/company_tickers.json", verify=False, timeout=15) # Add timeout
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+        
+        if not response.text.strip(): # Check if response body is empty
+            print(f"ERROR: company_tickers.json response is empty for {self.ticker}. Status: {response.status_code}")
+            raise ValueError(f"Empty response for company_tickers.json while processing {self.ticker}")
+
+        try:
+            ticker_json = response.json()
+        except json.JSONDecodeError as e:
+            print(f"ERROR: Failed to parse JSON for company_tickers.json for {self.ticker}. Error: {e}")
+            print(f"Response text (first 500 chars): {response.text[:500]}")
+            raise ValueError(f"Invalid JSON for company_tickers.json while processing {self.ticker}") from e
+        # DEBUGGING CHANGE END
 
         for company in ticker_json.values():
             if company["ticker"] == self.ticker:
@@ -22,17 +45,34 @@ class sec_edgar_endpoint:
     
     def get_submission_data(self):
         url = f"https://data.sec.gov/submissions/CIK{self.cik}.json"
-        self.company_submission_data = requests.get(url, headers=self.headers, verify=False).json()
+        
+        # DEBUGGING CHANGE START
+        print(f"Fetching submission data for CIK {self.cik} from URL: {url}...")
+        response = self.session.get(url, verify=False, timeout=15) # Add timeout
+        response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+
+        if not response.text.strip(): # Check if response body is empty
+            print(f"ERROR: Submission data response is empty for CIK {self.cik}. Status: {response.status_code}")
+            raise ValueError(f"Empty response for submission data for CIK {self.cik}")
+
+        try:
+            self.company_submission_data = response.json()
+        except json.JSONDecodeError as e:
+            print(f"ERROR: Failed to parse JSON for submission data for CIK {self.cik}. Error: {e}")
+            print(f"Response text (first 500 chars): {response.text[:500]}")
+            raise ValueError(f"Invalid JSON for submission data for CIK {self.cik}") from e
+        # DEBUGGING CHANGE END
+        
         return self.company_submission_data
     
     def get_filtered_filings_data(self):
         # Returns only rows with form 10-K or 10-Q
         self.only_filings_df = pd.DataFrame(self.company_submission_data['filings']['recent'])
-        print(self.only_filings_df)
+        #print(self.only_filings_df)
         self.filtered_filings_df = self.only_filings_df[(self.only_filings_df['form'] == '10-K') |( self.only_filings_df['form'] == '10-Q')]
         self.filtered_filings_df = self.filtered_filings_df[['accessionNumber', 'reportDate', 'form']]
         self.filtered_filings_df = self.filtered_filings_df.reset_index(drop=True)
-        print(self.filtered_filings_df)
+        #print(self.filtered_filings_df)
         
         return self.filtered_filings_df
     

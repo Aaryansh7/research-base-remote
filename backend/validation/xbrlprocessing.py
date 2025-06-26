@@ -111,4 +111,6 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
     #print(f"Cleaned DataFrame size (after removing broken links) for {ticker}: {len(df_cleaned)}")
     #print(f"Total working links found for {ticker}: {total_working_links_for_company}")
 
+    return total_working_links_for_company
+
    

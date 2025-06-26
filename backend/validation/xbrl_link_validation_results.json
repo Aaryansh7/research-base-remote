@@ -1,0 +1,302 @@
+[
+    {
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc.",
+        "working_links": 0,
+        "status": "Success"
+    },
+    {
+        "ticker": "AMZN",
+        "name": "AMAZON COM INC",
+        "working_links": 9,
+        "status": "Success"
+    },
+    {
+        "ticker": "MSFT",
+        "name": "MICROSOFT CORP",
+        "working_links": 8,
+        "status": "Success"
+    },
+    {
+        "ticker": "NVDA",
+        "name": "NVIDIA CORP",
+        "working_links": 9,
+        "status": "Success"
+    },
+    {
+        "ticker": "META",
+        "name": "Meta Platforms, Inc.",
+        "working_links": 5,
+        "status": "Success"
+    },
+    {
+        "ticker": "WMT",
+        "name": "Walmart Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "JPM",
+        "name": "JPMORGAN CHASE & CO",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "LLY",
+        "name": "ELI LILLY & Co",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "working_links": 10,
+        "status": "Success"
+    },
+    {
+        "ticker": "ORCL",
+        "name": "ORACLE CORP",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "V",
+        "name": "VISA INC.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "SPY",
+        "name": "SPDR S&P 500 ETF TRUST",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "NFLX",
+        "name": "NETFLIX INC",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "MA",
+        "name": "Mastercard Inc",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "XOM",
+        "name": "EXXON MOBIL CORP",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "COST",
+        "name": "COSTCO WHOLESALE CORP /NEW",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "JNJ",
+        "name": "JOHNSON & JOHNSON",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "PG",
+        "name": "PROCTER & GAMBLE Co",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "HD",
+        "name": "HOME DEPOT, INC.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "NVO",
+        "name": "NOVO NORDISK A S",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "SAP",
+        "name": "SAP SE",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "ABBV",
+        "name": "AbbVie Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "BAC",
+        "name": "BANK OF AMERICA CORP /DE/",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "PLTR",
+        "name": "Palantir Technologies Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "KO",
+        "name": "COCA COLA CO",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "ASML",
+        "name": "ASML HOLDING NV",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "PM",
+        "name": "Philip Morris International Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "BABA",
+        "name": "Alibaba Group Holding Ltd",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "UNH",
+        "name": "UNITEDHEALTH GROUP INC",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "TMUS",
+        "name": "T-Mobile US, Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "IBM",
+        "name": "INTERNATIONAL BUSINESS MACHINES CORP",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "CSCO",
+        "name": "CISCO SYSTEMS, INC.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "CVX",
+        "name": "CHEVRON CORP",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "GE",
+        "name": "GENERAL ELECTRIC CO",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "CRM",
+        "name": "Salesforce, Inc.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "ABT",
+        "name": "ABBOTT LABORATORIES",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "WFC",
+        "name": "WELLS FARGO & COMPANY/MN",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "NVS",
+        "name": "NOVARTIS AG",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "TM",
+        "name": "TOYOTA MOTOR CORP/",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "AZN",
+        "name": "ASTRAZENECA PLC",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "LIN",
+        "name": "LINDE PLC",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "MCD",
+        "name": "MCDONALDS CORP",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "SHEL",
+        "name": "Shell plc",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "DIS",
+        "name": "Walt Disney Co",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "INTU",
+        "name": "INTUIT INC.",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "HSBC",
+        "name": "HSBC HOLDINGS PLC",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "MS",
+        "name": "MORGAN STANLEY",
+        "working_links": 0,
+        "status": "Error: Expecting value: line 1 column 1 (char 0)"
+    },
+    {
+        "ticker": "AVGO",
+        "name": "Broadcom Inc.",
+        "working_links": 3,
+        "status": "Success"
+    },
+    {
+        "ticker": "TSLA",
+        "name": "Tesla, Inc.",
+        "working_links": 2,
+        "status": "Success"
+    },
+    {
+        "ticker": "BRK-B",
+        "name": "BERKSHIRE HATHAWAY INC",
+        "working_links": 0,
+        "status": "Success"
+    }
+]
