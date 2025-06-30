@@ -7,6 +7,10 @@ frontend/node_modules
 
 # Backend specific ignores
 /backend/xbrl_cache/
+/backend/headers/xbrl_caches/www.sec.gov/
+/backend/headers/xbrl_caches/xbrl.fasb.org/
+/backend/headers/xbrl_caches/xbrl.sec.gov/
+backend/headers/xbrl_caches/www.xbrl.org/
 
 # testing
 /coverage

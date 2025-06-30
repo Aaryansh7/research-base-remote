@@ -60,7 +60,7 @@ def fetch_10k_submission_dates(cik, company_name):
     return ten_k_filings
 
 if __name__ == "__main__":
-    company_tickers = ["META"] # Example tickers
+    company_tickers = ["IBM"] # Example tickers
 
     for ticker in company_tickers:
         print(f"\nFetching 10-K submission dates for {ticker}...")

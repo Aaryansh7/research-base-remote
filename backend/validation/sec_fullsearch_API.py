@@ -1,10 +1,15 @@
 import requests
+import os
+import logging
+from xbrl.cache import HttpCache
+from xbrl.instance import XbrlParser, XbrlInstance
 import json
 import time
 import warnings
 import pandas as pd
 from datetime import datetime, timedelta
 from urllib.parse import urlencode # Import urlencode to build the query string
+import re
 
 warnings.filterwarnings("ignore") # Ignore unverified HTTPS requests warning for simplicity, but avoid in production.
 
@@ -12,7 +17,16 @@ warnings.filterwarnings("ignore") # Ignore unverified HTTPS requests warning for
 # Replace with your actual application name and email address.
 # This is crucial for SEC compliance and avoiding 403 errors.
 # Example: "MyInvestmentApp/1.0 (your.name@example.com)"
-USER_AGENT = "YourCustomResearchApp/1.0 (your.email@example.com)" 
+USER_AGENT = "CustomResearchApp/1.0 (aaryanshmb7@gmail.com)" 
+
+logging.basicConfig(level=logging.INFO)
+
+xbrl_cache_dir = os.path.join("/tmp", "xbrl_caches")
+os.makedirs(xbrl_cache_dir, exist_ok=True)
+cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False) # Keep verify=False here for SEC connections
+
+cache.set_headers({'User-Agent': USER_AGENT})
+parser = XbrlParser(cache)
 
 def get_company_cik(ticker):
     """
@@ -150,7 +164,7 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
 
 if __name__ == "__main__":
     # Example tickers to test. Make sure to replace USER_AGENT at the top of the file!
-    company_tickers = ["JPM"] 
+    company_tickers = ["PEP", "XOM", "KO"] 
 
     all_companies_10k_data_dfs = {}
 
@@ -176,8 +190,52 @@ if __name__ == "__main__":
                     print(f"    - {row['filing_date']} ({row['form_type']}): {row['report_link']}")
                 # --- END NEW ADDITION ---
 
+                
+
+                df = df_filings
+
+                df['s3_json_key'] = None
+
+                # Iterate over each row in the DataFrame
+                for index, row in df.iterrows():
+                    time.sleep(0.2)
+                    schema_url = row['report_link'] # this is now guaranteed to be a working link (or skipped)
+
+                    if schema_url is None: # Double check, though the filter above should handle it
+                        logging.warning(f"Skipping row {index} as no working EDGAR link was found.")
+                        df.at[index, 's3_json_key'] = "ERROR: No working EDGAR link"
+                        continue
+
+                    try:
+                        logging.info(f"Processing XBRL instance from: {schema_url}")
+                        inst: XbrlInstance = parser.parse_instance(schema_url)
+
+                        match = re.search(r'/([^/]+)\.htm$', schema_url)
+                        if match:
+                            base_filename = match.group(1)
+                        else:
+                            base_filename = f"unknown_file_{index}"
+                            logging.warning(f"Could not extract base filename from URL: {schema_url}. Using '{base_filename}'.")
+
+                        s3_key = f"xbrl_json_data/{base_filename}.json" 
+
+                        xbrl_json_data = inst.json()
+                        data_dict = json.loads(xbrl_json_data)
+                        #print(data_dict)
+
+                        df.at[index, 's3_json_key'] = s3_key
+
+                    except Exception as e:
+                        logging.error(f"Error processing and uploading {schema_url}: {e}")
+                        df.at[index, 's3_json_key'] = f"ERROR: {e}"
+
+                print(f"\nAll XBRL instances processed. JSON files are uploaded to S3.")
+                print("\nUpdated DataFrame with S3 JSON keys:")
+                print(df)
+
             else:
                 print(f"  No historical 10-K filings found for {ticker} in the last 5 years.")
+
         else:
             print(f"  Could not find CIK for {ticker}. Please check the ticker symbol or network connection.")
         
@@ -186,11 +244,3 @@ if __name__ == "__main__":
         time.sleep(3) 
 
     print("\n--- All Processing Complete ---")
-    print("\nSummary of 10-K Filings Found (Last 5 Years, First Page Max 10 Rows):")
-    for ticker, df in all_companies_10k_data_dfs.items():
-        print(f"- {ticker}: {len(df)} filings")
-
-    # Example: Accessing data for MSFT
-    if 'MSFT' in all_companies_10k_data_dfs:
-        print("\nFull DataFrame for MSFT (all fetched rows):")
-        print(all_companies_10k_data_dfs['MSFT'])

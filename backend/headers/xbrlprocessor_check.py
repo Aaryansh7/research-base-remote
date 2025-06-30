@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import os
+import sys
 from tqdm import tqdm
 import logging
 from xbrl.cache import HttpCache
@@ -9,6 +10,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
+import time
 
 from .s3_utils import write_json_to_s3, read_json_from_s3
 
@@ -17,6 +19,40 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 USER_AGENT = "YourCustomResearchApp/1.0 (your.email@example.com)" 
+
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('xbrl').setLevel(logging.DEBUG)
+
+# --- PERMANENT CACHE DIRECTORY SETUP ---
+# Create the xbrl_caches folder in the same directory as this script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+xbrl_cache_dir = os.path.join(script_dir, "xbrl_caches")
+os.makedirs(xbrl_cache_dir, exist_ok=True)
+logging.info(f"XBRL cache directory set to: {xbrl_cache_dir}")
+
+cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False) # Keep verify=False here for SEC connections
+cache.set_headers({'User-Agent': USER_AGENT})
+
+'''
+# --- ADD THIS SECTION FOR TAXONOMY CATALOG MAPPING ---
+cyd_namespace = "http://xbrl.sec.gov/cyd/2024"
+# Assuming you extracted the cyd-2024.zip into xbrl_caches/cyd/2024/
+cyd_local_path = os.path.join(xbrl_cache_dir, "cyd", "2024", "cyd-2024.xsd") 
+
+# Check if the local file exists before adding to catalog (optional, but good for debugging)
+if os.path.exists(cyd_local_path):
+    logging.info(f"Adding XBRL taxonomy catalog entry: {cyd_namespace} -> {cyd_local_path}")
+    cache.add_catalog_entry(cyd_namespace, cyd_local_path)
+else:
+    logging.warning(f"Local CYD 2024 taxonomy not found at {cyd_local_path}. "
+                    "XBRL parser will try to fetch it from the internet, which might cause errors.")
+    # As a fallback, if you want it to always try the online version first, 
+    # you could explicitly add it here, though the cache handles this by default.
+    # cache.add_catalog_entry(cyd_namespace, "https://xbrl.sec.gov/cyd/2024/cyd-2024.xsd")
+# --- END ADDITION ---
+'''
+parser = XbrlParser(cache)
+
 
 # ------------------ UTILITY FUNCTIONS ------------------------------- #
 
@@ -91,7 +127,7 @@ def get_company_cik(ticker):
         print(f"Error fetching CIK for {ticker}: {e}")
         return None
     
-    
+
 def fetch_historical_10k_filings_api_get(cik, company_name):
     """
     Fetches the FIRST page (max 10 rows) of historical 10-K filings for a given company CIK
@@ -229,21 +265,16 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
         print(f"  No historical 10-K filings found for {ticker} in the last 5 years.")
 
 
-    logging.basicConfig(level=logging.INFO)
 
-    xbrl_cache_dir = os.path.join("/tmp", "xbrl_caches")
-    os.makedirs(xbrl_cache_dir, exist_ok=True)
-    cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False) # Keep verify=False here for SEC connections
-    
-    cache.set_headers({'From': 'YOUR@EMAIL.com', 'User-Agent': 'Company Name AdminContact@<company-domain>.com'})
-    parser = XbrlParser(cache)
 
     df = df_filings
 
     df['s3_json_key'] = None
 
+    loop_break_flag = False
     # Iterate over each row in the DataFrame
     for index, row in df.iterrows():
+        time.sleep(1)
         schema_url = row['report_link'] # this is now guaranteed to be a working link (or skipped)
 
         if schema_url is None: # Double check, though the filter above should handle it
@@ -279,6 +310,14 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
         except Exception as e:
             logging.error(f"Error processing and uploading {schema_url}: {e}")
             df.at[index, 's3_json_key'] = f"ERROR: {e}"
+            if str(e) == "The taxonomy with namespace http://xbrl.sec.gov/cyd/2024 could not be found. Please check if it is imported in the schema file": 
+                print("Ending loop now")
+                loop_break_flag = True
+                break
+
+    if loop_break_flag:
+        print("Exiting")
+        sys.exit()
 
     print(f"\nAll XBRL instances processed. JSON files are uploaded to S3.")
     print("\nUpdated DataFrame with S3 JSON keys:")
@@ -350,8 +389,8 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
     initialized_financial_df = create_initialized_financial_dataframe_by_date(all_extracted_facts)
 
-    print("\nNew Initialized Financial DataFrame:")
-    print(initialized_financial_df)
+    #print("\nNew Initialized Financial DataFrame:")
+    #print(initialized_financial_df)
 
     print("\n--- Populating DataFrame with extracted facts ---")
 
