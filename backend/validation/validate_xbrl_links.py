@@ -65,7 +65,7 @@ def run_xbrl_link_validation():
     print("Fetching all US company tickers...")
 
     all_companies = get_sec_tickers()
-    all_companies = all_companies[:1000]
+    all_companies = all_companies[:100]
 
     if not all_companies:
         print("No companies found or an error occurred while fetching tickers. Exiting.")

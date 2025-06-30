@@ -63,12 +63,18 @@ if __name__ == "__main__":
     if us_tickers:
         print(f"Successfully fetched {len(us_tickers)} US company tickers.")
         print("\n--- First 10 Companies ---")
-        for i in range(min(10, len(us_tickers))):
+        for i in range( len(us_tickers)):
             print(us_tickers[i])
-        
-        print("\n--- Last 5 Companies ---")
-        for i in range(max(0, len(us_tickers) - 5), len(us_tickers)):
-            print(us_tickers[i])
+            
+    # --- Code to save to JSON file ---
+        output_filename = "us_company_tickers.json"
+        try:
+            with open(output_filename, 'w') as f:
+                json.dump(us_tickers, f, indent=4) # indent for pretty printing
+            print(f"\nSuccessfully saved {len(us_tickers)} tickers to {output_filename}")
+        except IOError as e:
+            print(f"Error saving data to file {output_filename}: {e}")
+        # ---------------------------------
             
         # You can now use 'us_tickers' just like your 'allCompanies' state variable
         # For example, to find a specific company:
