@@ -15,9 +15,8 @@ import DebtAssetRatioChart from './features/SolvencyRatios/DebtAssetRatio';
 import InventoryTurnoverChart from './features/EfficiencyRatios/InventoryTurnover';
 import AssetTurnoverChart from './features/EfficiencyRatios/AssetTurnover';
 
-// You will import other ratio components here as you create them:
-// import GrossProfitChart from './features/Profitability/GrossProfitChart';
-
+// Import the JSON data
+import allCompaniesData from './us_company_tickers.json'; // Adjust the path as needed
 
 function App() {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -26,40 +25,8 @@ function App() {
 
   // --- Search Functionality State ---
   const [searchQuery, setSearchQuery] = useState('');
-  const [allCompanies] = useState([
-    {"name": "Apple Inc.", "ticker": "AAPL"},
-    {"name": "Microsoft Corp.", "ticker": "MSFT"},
-    {"name": "Amazon.com Inc.", "ticker": "AMZN"},
-    {"name": "Alphabet Inc.", "ticker": "GOOG"},
-    {"name": "NVIDIA Corp.", "ticker": "NVDA"},
-    {"name": "Meta Platforms Inc.", "ticker": "META"},
-    {"name": "Tesla Inc.", "ticker": "TSLA"},
-    {"name": "Berkshire Hathaway Inc. (Class B)", "ticker": "BRK.B"},
-    {"name": "Eli Lilly and Company", "ticker": "LLY"},
-    {"name": "Johnson & Johnson", "ticker": "JNJ"},
-    {"name": "Visa Inc.", "ticker": "V"},
-    {"name": "JPMorgan Chase & Co.", "ticker": "JPM"},
-    {"name": "Walmart Inc.", "ticker": "WMT"},
-    {"name": "Exxon Mobil Corp.", "ticker": "XOM"},
-    {"name": "UnitedHealth Group Inc.", "ticker": "UNH"},
-    {"name": "Taiwan Semiconductor Manufacturing Company Limited (ADR)", "ticker": "TSM"},
-    {"name": "Procter & Gamble Co.", "ticker": "PG"},
-    {"name": "Broadcom Inc.", "ticker": "AVGO"},
-    {"name": "Chevron Corp.", "ticker": "CVX"},
-    {"name": "Merck & Co. Inc.", "ticker": "MRK"},
-    {"name": "Coca-Cola Co.", "ticker": "KO"},
-    {"name": "PepsiCo Inc.", "ticker": "PEP"},
-    {"name": "Intel Corp.", "ticker": "INTC"},
-    {"name": "Salesforce Inc.", "ticker": "CRM"},
-    {"name": "Bank of America Corp.", "ticker": "BAC"},
-    {"name": "AbbVie Inc.", "ticker": "ABBV"},
-    {"name": "Adobe Inc.", "ticker": "ADBE"},
-    {"name": "Costco Wholesale Corp.", "ticker": "COST"},
-    {"name": "McDonald's Corporation", "ticker": "MCD"},
-    {"name": "Boeing Co.", "ticker": "BA"},
-    {"name": "Home Depot Inc.", "ticker": "HD"},
-    {"name": "Netflix Inc.", "ticker": "NFLX"}
-  ]);
+  // Initialize allCompanies directly from the imported JSON data
+  const [allCompanies] = useState(allCompaniesData); // Use the imported data here
   const [filteredCompanies, setFilteredCompanies] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [selectedCompanyTicker, setSelectedCompanyTicker] = useState(null);
@@ -88,6 +55,8 @@ function App() {
       setFilteredCompanies([]);
     }
   }, [searchQuery, allCompanies]);
+
+  // ... rest of your App.js code remains the same ...
 
   // --- Search Input Handlers ---
   const handleSearchChange = (event) => {

@@ -15,8 +15,8 @@ class sec_edgar_endpoint:
         self.session.headers.update(self.headers)
 
     def get_cik_matching_ticker(self, ticker):
-        self._apply_rate_limit() # Ensure rate limit is applied
-        ticker = ticker.upper().replace(".", "-")
+        #self._apply_rate_limit() # Ensure rate limit is applied
+        ticker = ticker.upper()
         self.ticker = ticker
         
         # DEBUGGING CHANGE START

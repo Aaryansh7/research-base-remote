@@ -18,7 +18,7 @@ from headers.s3_utils import read_csv_from_s3, write_df_to_csv_s3
 from headers.edgarAPI import sec_edgar_endpoint
 # Import the xbrl_data_processor function
 # Make sure xbrl_data_processor also accepts s3_bucket_name
-from headers.xbrlprocessing import xbrl_data_processor 
+from headers.xbrlprocessor_check import xbrl_data_processor 
 
 # Import the new function from src/profitabilityratios.py
 from src.profitabilityratio import get_netmargin, get_operatingmargin
