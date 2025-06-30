@@ -71,6 +71,27 @@ def find_latest_tuple_by_string(data_list, search_string_list):
                     
     return latest_tuple
 
+def get_company_cik(ticker):
+    """
+    Fetches the CIK for a given stock ticker from SEC's public mapping.
+    """
+    url = "https://www.sec.gov/files/company_tickers.json"
+    headers = {'User-Agent': USER_AGENT}
+    try:
+        response = requests.get(url, headers=headers, verify=False)
+        response.raise_for_status() # Raise an exception for HTTP errors
+        tickers_data = response.json()
+        
+        for company_info in tickers_data.values():
+            if company_info['ticker'] == ticker.upper():
+                # CIKs are typically 10 digits and might be padded with leading zeros
+                return str(company_info['cik_str']).zfill(10)
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching CIK for {ticker}: {e}")
+        return None
+    
+    
 def fetch_historical_10k_filings_api_get(cik, company_name):
     """
     Fetches the FIRST page (max 10 rows) of historical 10-K filings for a given company CIK

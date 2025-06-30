@@ -18,7 +18,7 @@ from headers.s3_utils import read_csv_from_s3, write_df_to_csv_s3
 from headers.edgarAPI import sec_edgar_endpoint
 # Import the xbrl_data_processor function
 # Make sure xbrl_data_processor also accepts s3_bucket_name
-from headers.xbrlprocessor_check import xbrl_data_processor 
+from headers.xbrlprocessor_check import get_company_cik, fetch_historical_10k_filings_api_get, xbrl_data_processor 
 
 # Import the new function from src/profitabilityratios.py
 from src.profitabilityratio import get_netmargin, get_operatingmargin
@@ -59,16 +59,18 @@ def get_company_info(ticker):
 
     try:
         # Step 1: Create an instance of sec_edgar_endpoint
-        edgar_api = sec_edgar_endpoint()
+        #edgar_api = sec_edgar_endpoint()
         # Step 2: Call the main_execution function to get reporting data
-        reportings_data, cik = edgar_api.main_execution(ticker)
+        #reportings_data, cik = edgar_api.main_execution(ticker)
+        cik = get_company_cik(ticker)
+        reportings_data = fetch_historical_10k_filings_api_get(cik, ticker)
         print(f"Reportings data obtained for {ticker}:\n{reportings_data.head()}")
 
-        # Ensure 'reportDate' is in datetime format for proper comparison
-        reportings_data['reportDate'] = pd.to_datetime(reportings_data['reportDate'])
+        # Ensure 'reporting_date' is in datetime format for proper comparison
+        reportings_data['reporting_date'] = pd.to_datetime(reportings_data['reporting_date'])
 
         # Get the latest report date from the newly fetched data
-        latest_fetched_date = reportings_data['reportDate'].max()
+        latest_fetched_date = reportings_data['reporting_date'].max()
         print(f"Latest fetched report date from accessionNumber datatable: {latest_fetched_date}")
 
         latest_stored_date = None
