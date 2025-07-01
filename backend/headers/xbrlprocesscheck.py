@@ -12,13 +12,32 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 import time
 
-from .s3_utils import write_json_to_s3, read_json_from_s3
+# Assuming s3_utils.py is in the same directory or accessible in PYTHONPATH
+# from .s3_utils import write_json_to_s3, read_json_from_s3
+# For standalone execution without S3, we'll mock these or provide simple placeholders
+try:
+    from .s3_utils import write_json_to_s3, read_json_from_s3
+except ImportError:
+    logging.warning("s3_utils not found. Mocking S3 functions for local testing.")
+    def write_json_to_s3(data, file_key, bucket_name):
+        print(f"Mock S3: Writing to {bucket_name}/{file_key}")
+        # Example: write to a local file for testing
+        os.makedirs(os.path.dirname(file_key), exist_ok=True)
+        with open(file_key, 'w') as f:
+            json.dump(data, f, indent=4)
+
+    def read_json_from_s3(file_key, bucket_name):
+        print(f"Mock S3: Reading from {bucket_name}/{file_key}")
+        # Example: read from a local file for testing
+        with open(file_key, 'r') as f:
+            return json.load(f)
+
 
 # Suppress InsecureRequestWarning
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-USER_AGENT = "YourCustomResearchApp/1.0 (your.email@example.com)" 
+USER_AGENT = "YourCustomResearchApp/1.0 (your.email@example.com)"
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('xbrl').setLevel(logging.DEBUG)
@@ -33,35 +52,16 @@ logging.info(f"XBRL cache directory set to: {xbrl_cache_dir}")
 cache: HttpCache = HttpCache(xbrl_cache_dir, verify_https=False) # Keep verify=False here for SEC connections
 cache.set_headers({'User-Agent': USER_AGENT})
 
-'''
-# --- ADD THIS SECTION FOR TAXONOMY CATALOG MAPPING ---
-cyd_namespace = "http://xbrl.sec.gov/cyd/2024"
-# Assuming you extracted the cyd-2024.zip into xbrl_caches/cyd/2024/
-cyd_local_path = os.path.join(xbrl_cache_dir, "cyd", "2024", "cyd-2024.xsd") 
-
-# Check if the local file exists before adding to catalog (optional, but good for debugging)
-if os.path.exists(cyd_local_path):
-    logging.info(f"Adding XBRL taxonomy catalog entry: {cyd_namespace} -> {cyd_local_path}")
-    cache.add_catalog_entry(cyd_namespace, cyd_local_path)
-else:
-    logging.warning(f"Local CYD 2024 taxonomy not found at {cyd_local_path}. "
-                    "XBRL parser will try to fetch it from the internet, which might cause errors.")
-    # As a fallback, if you want it to always try the online version first, 
-    # you could explicitly add it here, though the cache handles this by default.
-    # cache.add_catalog_entry(cyd_namespace, "https://xbrl.sec.gov/cyd/2024/cyd-2024.xsd")
-# --- END ADDITION ---
-'''
 parser = XbrlParser(cache)
 
 
 # ------------------ UTILITY FUNCTIONS ------------------------------- #
 
 def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
-    # ... (no change, already in your code) ...
     financial_accounting_variables = [
         'Revenue', 'CostofSales', 'GrossProfit', 'OperatingExpense', 'ResearchExpense', 'Depreciation', 'Amortization', 'OperatingIncome', 'Interest', 'Tax', 'NetIncome',
-        'TotalAsset', 'CurrentAssets', 'Inventory', 'PPEnet', 'Equity(BV)', 'ShortTermDebt(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'CurrentLiabilities', 'TotalLiability', 
-        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 
+        'TotalAsset', 'CurrentAssets', 'Inventory', 'PPEnet', 'Equity(BV)', 'ShortTermDebt(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'CurrentLiabilities', 'TotalLiability',
+        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour',
         'LeaseDueYearFive', 'LeaseDueAfterYearFive', 'Cash'
     ]
 
@@ -81,19 +81,21 @@ def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
     return new_df
 
 def find_latest_tuple_by_string(data_list, search_string_list):
-    # ... (no change, already in your code) ...
     search_string = None
 
     for search_element in search_string_list:
         for main_tuple in data_list:
-            if search_element == main_tuple[0]:
+            if main_tuple[0] == search_element: # Directly compare the concept string
                 search_string = search_element
                 break
         if search_string:
                 break
 
     latest_tuple = None
-    
+
+    if search_string is None: # If no search string found, return None
+        return None
+
     for current_tuple in data_list:
         str_value, num_value, dt_object = current_tuple
 
@@ -101,10 +103,10 @@ def find_latest_tuple_by_string(data_list, search_string_list):
             if latest_tuple is None:
                 latest_tuple = current_tuple
             else:
-                _, _, latest_dt_object = latest_tuple 
+                _, _, latest_dt_object = latest_tuple
                 if dt_object > latest_dt_object:
                     latest_tuple = current_tuple
-                    
+
     return latest_tuple
 
 def get_company_cik(ticker):
@@ -117,7 +119,7 @@ def get_company_cik(ticker):
         response = requests.get(url, headers=headers, verify=False)
         response.raise_for_status() # Raise an exception for HTTP errors
         tickers_data = response.json()
-        
+
         for company_info in tickers_data.values():
             if company_info['ticker'] == ticker.upper():
                 # CIKs are typically 10 digits and might be padded with leading zeros
@@ -126,7 +128,7 @@ def get_company_cik(ticker):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching CIK for {ticker}: {e}")
         return None
-    
+
 
 def fetch_historical_10k_filings_api_get(cik, company_name):
     """
@@ -135,14 +137,14 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
     5-year date range, and fetches only the top 10 results.
     """
     base_search_api_url = "https://efts.sec.gov/LATEST/search-index" # Base URL
-    headers = {'User-Agent': USER_AGENT} 
-    
+    headers = {'User-Agent': USER_AGENT}
+
     all_filings_data = []
-    
+
     # Define the date range for the last 5 years
     end_date_obj = datetime.now()
     start_date_obj = end_date_obj - timedelta(days=5 * 365) # Approximately 5 years ago
-    
+
     start_date_str = start_date_obj.strftime("%Y-%m-%d")
     end_date_str = end_date_obj.strftime("%Y-%m-%d")
 
@@ -152,10 +154,9 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
 
     print(f"  Starting 10-K search for CIK {cik} ({company_name}) from {start_date_str} to {end_date_str} (fetching first {rows_per_page} results)...")
 
-    # The while True loop is removed as we only need one request for the first page
     params = {
         'ciks': cik,
-        'entityName': f"{company_name.upper()} (CIK {cik})", 
+        'entityName': f"{company_name.upper()} (CIK {cik})",
         'filter_forms': '10-K', # Filter specifically for 10-K form types
         'startdt': start_date_str,
         'enddt': end_date_str,
@@ -163,52 +164,40 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
         'rows': rows_per_page,  # Now set to 10
     }
 
-    # Manually construct the full URL with all parameters
     search_url_with_filters = f"{base_search_api_url}?{urlencode(params)}"
-    print(f"  Requesting URL: {search_url_with_filters}") # For debugging/visibility
+    print(f"  Requesting URL: {search_url_with_filters}")
 
     try:
-        # Send a GET request with the full parameterized URL
         response = requests.get(search_url_with_filters, headers=headers, verify=False)
-        response.raise_for_status() # Raise an exception for HTTP errors
+        response.raise_for_status()
         search_results = response.json()
 
-        # The filings data is located under 'hits' -> 'hits'
         filings_in_batch = search_results.get('hits', {}).get('hits', [])
-        
+
         if not filings_in_batch:
             print(f"  No filings found for {company_name} in this date range.")
-        
+
         for hit in filings_in_batch:
             source = hit.get('_source', {})
-            _id = hit.get('_id', 'N/A') # Get the _id field which contains filename
-            
-            # Extract relevant fields. Field names based on previous successful JSON response.
+            _id = hit.get('_id', 'N/A')
+
             form_type = source.get('form', 'N/A')
-            filing_date = source.get('file_date', 'N/A') 
-            accession_number_with_dashes = source.get('adsh', 'N/A') 
-            
-            # Get 'period_ending' string and attempt to convert to datetime.date object
+            filing_date = source.get('file_date', 'N/A')
+            accession_number_with_dashes = source.get('adsh', 'N/A')
+
             reporting_date_str = source.get('period_ending', 'N/A')
             parsed_reporting_date = None
             if reporting_date_str != 'N/A':
                 try:
-                    # Parse the string into a datetime.date object
                     parsed_reporting_date = datetime.strptime(reporting_date_str, "%Y-%m-%d").date()
                 except ValueError:
                     print(f"  Warning: Could not parse reporting date '{reporting_date_str}' for accession {accession_number_with_dashes}.")
-                    parsed_reporting_date = None # Keep as None if parsing fails
+                    parsed_reporting_date = None
 
-            # Construct the link to the annual report
             report_link = 'N/A'
             if accession_number_with_dashes != 'N/A' and _id != 'N/A':
-                # Extract CIK without leading zeros for the URL path
-                cik_for_url = str(int(cik)) # Convert to int then back to str to remove leading zeros
-                
-                # Accession number without dashes for the URL path
+                cik_for_url = str(int(cik))
                 accession_number_without_dashes = accession_number_with_dashes.replace('-', '')
-
-                # Filename is the part of _id after the colon
                 filename = _id.split(':', 1)[-1] if ':' in _id else ''
 
                 if cik_for_url and accession_number_without_dashes and filename:
@@ -219,27 +208,24 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
                         f"{filename}"
                     )
 
-            # Double-check form type if needed, though 'filter_forms' should be effective
             if form_type in ['10-K', '10-K/A']:
                 all_filings_data.append({
                     'form_type': form_type,
                     'filing_date': filing_date,
-                    'reporting_date': parsed_reporting_date, # Now stores a datetime.date object or None
-                    'accession_number': accession_number_with_dashes, # Keep with dashes for raw data
-                    'report_link': report_link, 
-                    'cik': cik 
+                    'reporting_date': parsed_reporting_date,
+                    'accession_number': accession_number_with_dashes,
+                    'report_link': report_link,
+                    'cik': cik
                 })
-        
+
         print(f"  Fetched {len(filings_in_batch)} filings in this batch. Total collected: {len(all_filings_data)}")
-        
-        # A small sleep after the single request to be polite
-        time.sleep(0.5) 
+        time.sleep(0.5)
 
     except requests.exceptions.HTTPError as e:
         print(f"  HTTP Error fetching data for CIK {cik} ({company_name}): {e}")
         if e.response.status_code == 403:
             print("  (403 Forbidden: Ensure your User-Agent is unique and valid, and increase sleep times).")
-            print(f"  Response content: {e.response.text}") # Print response for more info
+            print(f"  Response content: {e.response.text}")
         elif e.response.status_code == 400:
             print(f"  (400 Bad Request: Check GET parameters. Response: {e.response.text})")
     except json.JSONDecodeError:
@@ -251,165 +237,275 @@ def fetch_historical_10k_filings_api_get(cik, company_name):
 
     return pd.DataFrame(all_filings_data)
 
+def fetch_company_facts_from_sec_api(cik):
+    """
+    Fetches all company facts for a given CIK from the SEC's companyfacts API.
+    Transforms the data into a list of (concept, value, date) tuples.
+    """
+    cik_padded = str(cik).zfill(10)
+    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik_padded}.json"
+    headers = {'User-Agent': USER_AGENT}
+    all_facts = []
+    print(f"  Attempting to fetch company facts from SEC API for CIK: {cik_padded}")
+
+    try:
+        response = requests.get(url, headers=headers, verify=False)
+        response.raise_for_status()
+        company_facts_data = response.json()
+
+        # Calculate the 5-year lookback date from today
+        today = datetime.now().date()
+        five_years_ago = today - timedelta(days=5 * 365) # Approximate 5 years
+
+        for taxonomy_type in ['us-gaap', 'dei']:
+            if taxonomy_type in company_facts_data.get('facts', {}):
+                for concept, concept_data in company_facts_data['facts'][taxonomy_type].items():
+                    for unit, unit_data_list in concept_data.get('units', {}).items():
+                        for fact_entry in unit_data_list:
+                            try:
+                                date_str = fact_entry.get('end')
+                                if not date_str:
+                                    continue
+                                period_datetime = datetime.fromisoformat(date_str)
+
+                                # Filter facts to only include those within the last 5 years
+                                if period_datetime.date() >= five_years_ago: # Compare date parts only
+                                    value = fact_entry.get('val')
+                                    if value is not None:
+                                        all_facts.append((concept, value, period_datetime))
+                                else:
+                                    pass # Fact is older than 5 years, skip it
+                            except ValueError as ve:
+                                logging.warning(f"  Could not parse date or value for concept '{concept}' from SEC API: {ve}. Skipping fact.")
+                                continue
+                            except Exception as ex:
+                                logging.warning(f"  Error processing fact for concept '{concept}' from SEC API: {ex}. Skipping fact.")
+                                continue
+        print(f"  Successfully fetched and processed {len(all_facts)} facts (filtered to last 5 years) from SEC Company Facts API.")
+        return all_facts
+    except requests.exceptions.HTTPError as e:
+        print(f"  HTTP Error fetching company facts for CIK {cik_padded}: {e}")
+        if e.response.status_code == 404:
+            print(f"  (404 Not Found: Company facts might not be available for CIK {cik_padded} or API path is incorrect).")
+        print(f"  Response content: {e.response.text}")
+    except json.JSONDecodeError:
+        print(f"  Error decoding JSON response from SEC Company Facts API for CIK {cik_padded}.")
+    except requests.exceptions.RequestException as e:
+        print(f"  Network error fetching company facts for CIK {cik_padded}: {e}")
+    except Exception as e:
+        print(f"  An unexpected error occurred while fetching company facts for CIK {cik_padded}: {e}")
+    return []
+
+
 # ------------ MAIN DATA PROCESSING FUNCTION ------------------------#
 def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None):
-    # Call the GET API function which now fetches only the first page with max 10 rows
-    df_filings = fetch_historical_10k_filings_api_get(cik_original,ticker) 
+    df_filings = fetch_historical_10k_filings_api_get(cik_original,ticker)
+
+    all_extracted_facts_from_xbrl = {} # Facts extracted directly from XBRL instance files
+    MIN_FACTS_THRESHOLD = 1000 # Threshold for individual XBRL instance raw facts
+
+    should_use_api_fallback = False # Flag to decide if we need global API fallback
+
+    # Collect all valid reporting dates from df_filings
+    # These are the specific dates for which we expect to have data, either from XBRL or API.
+    valid_reporting_dates = set()
+    if not df_filings.empty:
+        valid_reporting_dates = set(df_filings['reporting_date'].dropna())
+        print(f"  Valid reporting dates from filings: {sorted([d.strftime('%Y-%m-%d') for d in valid_reporting_dates])}")
+    else:
+        print(f"  No historical 10-K filings found for {ticker} in the last 5 years using original method.")
+        should_use_api_fallback = True # If no filings, definitely need fallback
 
     if not df_filings.empty:
         print(f"  SUCCESS: Fetched {len(df_filings)} historical 10-K filings for {ticker} in the last 5 years.")
         print("\n  Sample of fetched data:")
         print(df_filings.head())
 
-    else:
-        print(f"  No historical 10-K filings found for {ticker} in the last 5 years.")
+        df = df_filings.copy()
+        df['s3_json_key'] = None
+        loop_break_flag = False
 
-    df = df_filings
+        logging.info("--- Processing XBRL instances from EDGAR links ---")
+        for index, row in df.iterrows():
+            time.sleep(1)
+            schema_url = row['report_link']
+            report_date = row['reporting_date']
 
-    df['s3_json_key'] = None
-
-    loop_break_flag = False
-    # Iterate over each row in the DataFrame
-    for index, row in df.iterrows():
-        time.sleep(1)
-        schema_url = row['report_link'] # this is now guaranteed to be a working link (or skipped)
-
-        if schema_url is None: # Double check, though the filter above should handle it
-            logging.warning(f"Skipping row {index} as no working EDGAR link was found.")
-            df.at[index, 's3_json_key'] = "ERROR: No working EDGAR link"
-            continue
-
-        try:
-            logging.info(f"Processing XBRL instance from: {schema_url}")
-            inst: XbrlInstance = parser.parse_instance(schema_url)
-
-            match = re.search(r'/([^/]+)\.htm$', schema_url)
-            if match:
-                base_filename = match.group(1)
-            else:
-                base_filename = f"unknown_file_{index}"
-                logging.warning(f"Could not extract base filename from URL: {schema_url}. Using '{base_filename}'.")
-
-            s3_key = f"xbrl_json_data/{base_filename}.json" 
-
-            xbrl_json_data = inst.json()
-            data_dict = json.loads(xbrl_json_data)
-
-            write_json_to_s3(
-                data=data_dict,
-                file_key=s3_key,
-                bucket_name=s3_bucket_name
-            )
-            logging.info(f"Successfully uploaded XBRL JSON to s3://{s3_bucket_name}/{s3_key}")
-
-            df.at[index, 's3_json_key'] = s3_key
-
-        except Exception as e:
-            logging.error(f"Error processing and uploading {schema_url}: {e}")
-            df.at[index, 's3_json_key'] = f"ERROR: {e}"
-            if str(e) == "The taxonomy with namespace http://xbrl.sec.gov/cyd/2024 could not be found. Please check if it is imported in the schema file": 
-                print("Ending loop now")
-                loop_break_flag = True
-                break
-
-    if loop_break_flag:
-        print("Exiting")
-        sys.exit()
-
-    print(f"\nAll XBRL instances processed. JSON files are uploaded to S3.")
-    print("\nUpdated DataFrame with S3 JSON keys:")
-    print(df)
-
-    all_extracted_facts = {}
-
-    logging.info("--- Extracting facts from S3-backed JSON files ---")
-    for index, row in df.iterrows():
-        company_main_list = []
-        current_s3_json_key = row['s3_json_key'] 
-        report_date = row['reporting_date']
-
-        if not current_s3_json_key or "ERROR" in current_s3_json_key:
-            logging.warning(f"Skipping row {index} due to invalid JSON filepath: {current_s3_json_key}")
-            continue
-
-        try:
-            data = read_json_from_s3(file_key=current_s3_json_key, bucket_name=s3_bucket_name)
-
-            if "facts" not in data:
-                logging.warning(f"No 'facts' key found in JSON file: {current_s3_json_key}")
+            # Only process if report_date is valid (not None) and in our expected list
+            if report_date is None or report_date not in valid_reporting_dates:
+                logging.warning(f"Skipping row {index} with invalid or unexpected report date: {report_date}.")
+                df.at[index, 's3_json_key'] = "ERROR: Invalid or unexpected report date"
                 continue
 
-            for fact_key, fact_data in data["facts"].items():
-                if ("dimensions" in fact_data and "concept" in fact_data["dimensions"] and
-                        "period" in fact_data["dimensions"] and "value" in fact_data):
+            if schema_url == 'N/A':
+                logging.warning(f"Skipping row {index} as no valid EDGAR link was found.")
+                df.at[index, 's3_json_key'] = "ERROR: No working EDGAR link"
+                # If a filing has no link, it contributes to needing fallback for its date
+                should_use_api_fallback = True # Global fallback triggered if any specific filing fails this way
+                all_extracted_facts_from_xbrl[report_date] = [] # Mark as empty for this date
+                continue
+
+            try:
+                logging.info(f"Processing XBRL instance from: {schema_url}")
+                inst: XbrlInstance = parser.parse_instance(schema_url)
+                xbrl_json_data = inst.json()
+                data_dict = json.loads(xbrl_json_data)
+
+                # Count facts directly from data_dict['facts'] immediately as requested
+                current_instance_raw_facts_count = len(data_dict.get("facts", {}))
+                print(f"  Raw facts found in {os.path.basename(schema_url)} (from data_dict): {current_instance_raw_facts_count}")
+
+                # **Decision Point: Check if we should proceed with original method or use SEC API**
+                if current_instance_raw_facts_count < MIN_FACTS_THRESHOLD:
+                    logging.warning(f"  Raw facts ({current_instance_raw_facts_count}) for {os.path.basename(schema_url)} are below threshold ({MIN_FACTS_THRESHOLD}). This will trigger global API fallback.")
+                    should_use_api_fallback = True
+                    # Do NOT extract or filter facts for this report here.
+                    all_extracted_facts_from_xbrl[report_date] = [] # Mark as empty or discard these insufficient facts
+                    df.at[index, 's3_json_key'] = f"facts below threshold ({current_instance_raw_facts_count}), using companyfacts API json" # Mark in DF
                     
-                    if len(fact_data["dimensions"]) != 5:
-                        continue
-
-                    concept_value = fact_data["dimensions"]["concept"]
-                    period_value = fact_data["dimensions"]["period"]
-                    actual_value = fact_data["value"]
-
-                    date_str = ""
-                    if '/' in period_value:
-                        parts = period_value.split('/')
-                        if len(parts) != 2:
-                            raise ValueError(f"Invalid range format for period '{period_value}' in '{current_s3_json_key}'. Expected 'start/end'.")
-                        date_str = parts[1]
-                    else:
-                        date_str = period_value
+                    # Continue to the next filing, but don't populate detailed facts from this one
+                    s3_key = f"xbrl_json_data/{os.path.basename(schema_url).replace('.htm', '.json')}"
+                    write_json_to_s3(
+                        data=data_dict,
+                        file_key=s3_key,
+                        bucket_name=s3_bucket_name
+                    )
+                    logging.info(f"Successfully uploaded raw XBRL JSON to s3://{s3_bucket_name}/{s3_key}")
+                    continue # Skip to the next iteration of the loop
                 
-                    try:
-                        period_datetime = datetime.fromisoformat(date_str)
-                    except ValueError as ve:
-                        logging.warning(f"Could not parse date '{date_str}' from '{current_s3_json_key}' for concept '{concept_value}': {ve}. Skipping this fact.")
-                        continue
+                # IF we reach here, it means current_instance_raw_facts_count >= MIN_FACTS_THRESHOLD
+                # So, proceed with extracting and filtering facts for this report
+                company_main_list_for_report = []
+                if "facts" in data_dict:
+                    for fact_key, fact_data in data_dict["facts"].items():
+                        if ("dimensions" in fact_data and "concept" in fact_data["dimensions"] and
+                                "period" in fact_data["dimensions"] and "value" in fact_data):
 
-                    company_main_list.append((concept_value, actual_value, datetime.fromisoformat(date_str)))
-            all_extracted_facts[report_date] = company_main_list
+                            concept_value = fact_data["dimensions"]["concept"]
+                            period_value = fact_data["dimensions"]["period"]
+                            actual_value = fact_data["value"]
 
-        except FileNotFoundError:
-            logging.error(f"JSON file not found: {current_s3_json_key}. Skipping.")
-        except json.JSONDecodeError as e:
-            logging.error(f"Error decoding JSON from file: {current_s3_json_key}: {e}. Skipping.")
-        except Exception as e:
-            logging.error(f"An unexpected error occurred while processing {current_s3_json_key}: {e}. Skipping.")
+                            date_str = ""
+                            if '/' in period_value:
+                                parts = period_value.split('/')
+                                date_str = parts[1] if len(parts) > 1 else period_value
+                            else:
+                                date_str = period_value
 
-    print(f"\n--- Fact Extraction Complete ---")
-    print(f"Total facts extracted from all JSON files: {len(all_extracted_facts)}")
+                            try:
+                                period_datetime = datetime.fromisoformat(date_str)
+                                # Ensure the extracted fact's date is relevant to the current report_date
+                                # For XBRL instances, the fact's period_datetime should ideally match the report_date
+                                # or be the end date of the reporting period. We will still add it.
+                                company_main_list_for_report.append((concept_value, actual_value, period_datetime))
+                            except ValueError as ve:
+                                logging.warning(f"  Could not parse date '{date_str}' for concept '{concept_value}' in {schema_url}: {ve}. Skipping this fact for report {report_date}.")
+                                continue
+                
+                all_extracted_facts_from_xbrl[report_date] = company_main_list_for_report
 
-    keys_view = all_extracted_facts.keys()
-    #print(f"Using .keys(): {keys_view}")
+                # Always attempt to upload the raw JSON to S3 for debugging/archiving
+                s3_key = f"xbrl_json_data/{os.path.basename(schema_url).replace('.htm', '.json')}"
+                write_json_to_s3(
+                    data=data_dict,
+                    file_key=s3_key,
+                    bucket_name=s3_bucket_name
+                )
+                logging.info(f"Successfully uploaded XBRL JSON to s3://{s3_bucket_name}/{s3_key}")
+                df.at[index, 's3_json_key'] = s3_key # Record success of S3 upload
+
+            except Exception as e:
+                logging.error(f"Error processing {schema_url}: {e}")
+                df.at[index, 's3_json_key'] = f"ERROR: {e}"
+                all_extracted_facts_from_xbrl[report_date] = [] # Mark as empty due to error
+                should_use_api_fallback = True # An error processing an XBRL also triggers fallback
+                if "The taxonomy with namespace http://xbrl.sec.gov/cyd/2024 could not be found" in str(e):
+                    print("Ending loop due to missing CYD taxonomy (critical error).")
+                    loop_break_flag = True
+                    break
+
+        print(df)
+        if loop_break_flag:
+            print("Exiting XBRL parsing loop early.")
+            sys.exit()
+    # else: condition for should_use_api_fallback already handled at the top
+
+    final_facts_for_processing = {}
+    if should_use_api_fallback:
+        print(f"\n--- Initiating global fallback to SEC Company Facts API for CIK {cik_original} (filtering for last 5 years and filing dates) ---")
+        sec_api_facts = fetch_company_facts_from_sec_api(cik_original) # This function already filters for last 5 years
+        
+        if sec_api_facts:
+            # Filter API facts to only include those relevant to the dates found in df_filings
+            api_facts_for_filing_dates = []
+            for concept, value, date_obj in sec_api_facts:
+                if date_obj.date() in valid_reporting_dates: # Check if the fact's date is in our expected filing dates
+                    api_facts_for_filing_dates.append((concept, value, date_obj))
+                # else:
+                #    logging.debug(f"Skipping API fact {concept} for date {date_obj.date()} as it's not a filing date.")
+            
+            if api_facts_for_filing_dates:
+                # Group filtered API facts by their end date for consistent processing
+                for concept, value, date_obj in api_facts_for_filing_dates:
+                    date_key = date_obj.date() # Use only date part for keying
+                    if date_key not in final_facts_for_processing:
+                        final_facts_for_processing[date_key] = []
+                    final_facts_for_processing[date_key].append((concept, value, date_obj))
+                print(f"Successfully collected {len(api_facts_for_filing_dates)} facts from SEC Company Facts API (filtered by filing dates) for processing.")
+            else:
+                print("  Filtered SEC Company Facts API data did not yield any facts matching filing dates.")
+                # If API fallback filtered too much, still use whatever limited XBRL facts we might have
+                final_facts_for_processing = {
+                    k.date() if isinstance(k, datetime) else k: v
+                    for k, v in all_extracted_facts_from_xbrl.items()
+                    if v # Only include entries that actually have facts
+                }
+
+        else: # sec_api_facts was empty from the start
+            print("  SEC Company Facts API fallback did not yield any data.")
+            # If API fallback also fails, use whatever limited facts were extracted from XBRL (even if insufficient per-filing)
+            final_facts_for_processing = {
+                k.date() if isinstance(k, datetime) else k: v
+                for k, v in all_extracted_facts_from_xbrl.items()
+                if v # Only include entries that actually have facts
+            }
+    else:
+        print(f"\nSufficient facts extracted from XBRL instances. Skipping SEC Company Facts API fallback.")
+        final_facts_for_processing = {
+            k.date() if isinstance(k, datetime) else k: v
+            for k, v in all_extracted_facts_from_xbrl.items()
+            if v # Only include entries that actually have facts
+        }
 
 
-# ----------- Creating Financial Company Database --------------# 
+    if not final_facts_for_processing:
+        print("No facts available to create financial dataframe. Returning empty DataFrame.")
+        return pd.DataFrame()
 
-    initialized_financial_df = create_initialized_financial_dataframe_by_date(all_extracted_facts)
 
-    #print("\nNew Initialized Financial DataFrame:")
-    #print(initialized_financial_df)
+    initialized_financial_df = create_initialized_financial_dataframe_by_date(final_facts_for_processing)
 
     print("\n--- Populating DataFrame with extracted facts ---")
 
-    for report_date_dt, company_main_list in all_extracted_facts.items():
+    for report_date_dt, company_main_list in final_facts_for_processing.items():
         report_date_str = report_date_dt.strftime('%Y-%m-%d')
 
         if report_date_str in initialized_financial_df.columns:
-            # Revenue Filling 
+            # Revenue Filling
             revenue = find_latest_tuple_by_string(company_main_list, ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax"])
             if revenue is not None:
-               revenue = find_latest_tuple_by_string(company_main_list, ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax"])[1]
+               revenue = revenue[1]
             else:
-                revenue = 0.0 
+                revenue = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Revenue'].index
 
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = revenue
-            
-            # Operating Income Filling 
+
+            # Operating Income Filling
             operating_income = find_latest_tuple_by_string(company_main_list, ["OperatingIncomeLoss"])
             if operating_income is not None:
-                operating_income = find_latest_tuple_by_string(company_main_list, ["OperatingIncomeLoss"])[1]
+                operating_income = operating_income[1]
             else:
                 operating_income = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'OperatingIncome'].index
@@ -417,10 +513,10 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = operating_income
 
-            # Equity(Book Value) Filling 
+            # Equity(Book Value) Filling
             book_value_equity = find_latest_tuple_by_string(company_main_list, ["StockholdersEquity"])
             if book_value_equity is not None:
-                book_value_equity = find_latest_tuple_by_string(company_main_list, ["StockholdersEquity"])[1]
+                book_value_equity = book_value_equity[1]
             else:
                 book_value_equity = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Equity(BV)'].index
@@ -431,7 +527,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # ShortTermDebt(Book Value) Filling
             book_value_shortterm_debt = find_latest_tuple_by_string(company_main_list, ["DebtCurrent"])
             if book_value_shortterm_debt is not None:
-                book_value_shortterm_debt = find_latest_tuple_by_string(company_main_list, ["DebtCurrent"])[1]
+                book_value_shortterm_debt = book_value_shortterm_debt[1]
             else:
                 book_value_shortterm_debt = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'ShortTermDebt(BV)'].index
@@ -442,7 +538,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # LongTermDebt without lease (Book Value) Filling
             book_value_longtermdebt_withoutlease = find_latest_tuple_by_string(company_main_list, ["LongTermDebtNoncurrent"])
             if book_value_longtermdebt_withoutlease is not None:
-                book_value_longtermdebt_withoutlease = find_latest_tuple_by_string(company_main_list, ["LongTermDebtNoncurrent"])[1]
+                book_value_longtermdebt_withoutlease = book_value_longtermdebt_withoutlease[1]
             else:
                 book_value_longtermdebt_withoutlease = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermDebtWithoutLease(BV)'].index
@@ -453,7 +549,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # LongTermLease(Book Value) Filling
             book_value_longterm_lease = find_latest_tuple_by_string(company_main_list, ["LongTermLeaseLiabilityNoncurrentNet"])
             if book_value_longterm_lease is not None:
-                book_value_longterm_lease = find_latest_tuple_by_string(company_main_list, ["LongTermLeaseLiabilityNoncurrentNet"])[1]
+                book_value_longterm_lease = book_value_longterm_lease[1]
             else:
                 book_value_longterm_lease = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermLease(BV)'].index
@@ -478,7 +574,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Cash Filling
             cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue"])
             if cash is not None:
-                cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue"])[1]
+                cash = cash[1]
             else:
                 cash = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Cash'].index
@@ -489,7 +585,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Tax Filling
             tax = find_latest_tuple_by_string(company_main_list, ["IncomeTaxExpenseBenefit"])
             if tax is not None:
-                tax = find_latest_tuple_by_string(company_main_list, ["IncomeTaxExpenseBenefit"])[1]
+                tax = tax[1]
             else:
                 tax = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Tax'].index
@@ -501,7 +597,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # This Year
             lease_thisyear = find_latest_tuple_by_string(company_main_list, ["CurrentLeaseLiabilityNet"])
             if lease_thisyear is not None:
-                lease_thisyear = find_latest_tuple_by_string(company_main_list, ["CurrentLeaseLiabilityNet"])[1]
+                lease_thisyear = lease_thisyear[1]
             else:
                 lease_thisyear = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueThisYear'].index
@@ -512,7 +608,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year One (Lease)
             lease_yearone = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueNextTwelveMonths"])
             if lease_yearone is not None:
-                lease_yearone = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueNextTwelveMonths"])[1]
+                lease_yearone = lease_yearone[1]
             else:
                 lease_yearone = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearOne'].index
@@ -523,7 +619,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year Two (Lease)
             lease_yeartwo = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearTwo"])
             if lease_yeartwo is not None:
-                lease_yeartwo = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearTwo"])[1]
+                lease_yeartwo = lease_yeartwo[1]
             else:
                 lease_yeartwo = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearTwo'].index
@@ -534,7 +630,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year Three (Lease)
             lease_yearthree = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearThree"])
             if lease_yearthree is not None:
-                lease_yearthree = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearThree"])[1]
+                lease_yearthree = lease_yearthree[1]
             else:
                 lease_yearthree = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearThree'].index
@@ -545,7 +641,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year Four (Lease)
             lease_yearfour = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearFour"])
             if lease_yearfour is not None:
-                lease_yearfour = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearFour"])[1]
+                lease_yearfour = lease_yearfour[1]
             else:
                 lease_yearfour = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearFour'].index
@@ -556,7 +652,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year Five (Lease)
             lease_yearfive = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearFive"])
             if lease_yearfive is not None:
-                lease_yearfive = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueYearFive"])[1]
+                lease_yearfive = lease_yearfive[1]
             else:
                 lease_yearfive = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueYearFive'].index
@@ -567,7 +663,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Year After Five (Lease)
             lease_afteryearfive = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueAfterYearFive"])
             if lease_afteryearfive is not None:
-                lease_afteryearfive = find_latest_tuple_by_string(company_main_list, ["LesseeOperatingLeaseLiabilityPaymentsDueAfterYearFive"])[1]
+                lease_afteryearfive = lease_afteryearfive[1]
             else:
                 lease_afteryearfive = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LeaseDueAfterYearFive'].index
@@ -579,7 +675,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Net Income Filling
             netincome = find_latest_tuple_by_string(company_main_list, ["NetIncomeLoss"])
             if netincome is not None:
-                netincome = find_latest_tuple_by_string(company_main_list, ["NetIncomeLoss"])[1]
+                netincome = netincome[1]
             else:
                 netincome = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'NetIncome'].index
@@ -590,7 +686,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Current Assets Filling
             currentasset = find_latest_tuple_by_string(company_main_list, ["AssetsCurrent"])
             if currentasset is not None:
-                currentasset = find_latest_tuple_by_string(company_main_list, ["AssetsCurrent"])[1]
+                currentasset = currentasset[1]
             else:
                 currentasset = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentAssets'].index
@@ -601,7 +697,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Current Liabilities Filling
             currentliability = find_latest_tuple_by_string(company_main_list, ["LiabilitiesCurrent"])
             if currentliability is not None:
-                currentliability = find_latest_tuple_by_string(company_main_list, ["LiabilitiesCurrent"])[1]
+                currentliability = currentliability[1]
             else:
                 currentliability = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CurrentLiabilities'].index
@@ -612,18 +708,20 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Total Liability Filling
             totalliabilityplus_equitybv = find_latest_tuple_by_string(company_main_list, ["LiabilitiesAndStockholdersEquity"])
             if totalliabilityplus_equitybv is not None:
-                totalliabilityplus_equitybv = find_latest_tuple_by_string(company_main_list, ["LiabilitiesAndStockholdersEquity"])[1]
+                totalliabilityplus_equitybv = totalliabilityplus_equitybv[1]
             else:
                 totalliabilityplus_equitybv = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalLiability'].index
 
             if not row_index.empty:
-                initialized_financial_df.at[row_index[0], report_date_str] = totalliabilityplus_equitybv - book_value_equity
+                # Ensure book_value_equity is available for this calculation, if not, use 0.0
+                equity_for_calc = book_value_equity if book_value_equity is not None else 0.0
+                initialized_financial_df.at[row_index[0], report_date_str] = totalliabilityplus_equitybv - equity_for_calc
 
             # Total Assets Filling
             totalassets = find_latest_tuple_by_string(company_main_list, ["Assets"])
             if totalassets is not None:
-                totalassets = find_latest_tuple_by_string(company_main_list, ["Assets"])[1]
+                totalassets = totalassets[1]
             else:
                 totalassets = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'TotalAsset'].index
@@ -634,7 +732,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Inventory Filling
             inventory = find_latest_tuple_by_string(company_main_list, ["InventoryNet"])
             if inventory is not None:
-                inventory = find_latest_tuple_by_string(company_main_list, ["InventoryNet"])[1]
+                inventory = inventory[1]
             else:
                 inventory = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Inventory'].index
@@ -645,7 +743,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # CostOfSales Filling
             cogs = find_latest_tuple_by_string(company_main_list, ["CostOfRevenue", "CostOfGoodsAndServicesSold"])
             if cogs is not None:
-                cogs = find_latest_tuple_by_string(company_main_list, ["CostOfRevenue", "CostOfGoodsAndServicesSold"])[1]
+                cogs = cogs[1]
             else:
                 cogs = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CostofSales'].index
@@ -656,7 +754,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # GrossProfit Filling
             grossprofit = find_latest_tuple_by_string(company_main_list, ["GrossProfit"])
             if grossprofit is not None:
-                grossprofit = find_latest_tuple_by_string(company_main_list, ["GrossProfit"])[1]
+                grossprofit = grossprofit[1]
             else:
                 grossprofit = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'GrossProfit'].index
@@ -667,7 +765,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # OperatingExpense Filling
             operatingexpense = find_latest_tuple_by_string(company_main_list, ["CostsAndExpenses"])
             if operatingexpense is not None:
-                operatingexpense = find_latest_tuple_by_string(company_main_list, ["CostsAndExpenses"])[1]
+                operatingexpense = operatingexpense[1]
             else:
                 operatingexpense = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'OperatingExpense'].index
@@ -678,7 +776,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # ResearchExpense Filling
             researchexpense = find_latest_tuple_by_string(company_main_list, ["ResearchAndDevelopmentExpense"])
             if researchexpense is not None:
-                researchexpense = find_latest_tuple_by_string(company_main_list, ["ResearchAndDevelopmentExpense"])[1]
+                researchexpense = researchexpense[1]
             else:
                 researchexpense = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'ResearchExpense'].index
@@ -689,7 +787,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # InterestExpense Filling
             interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense"])
             if interestexpense is not None:
-                interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense"])[1]
+                interestexpense = interestexpense[1]
             else:
                 interestexpense = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Interest'].index
@@ -700,7 +798,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # PPE-net Filling
             ppenet = find_latest_tuple_by_string(company_main_list, ["PropertyPlantAndEquipmentNet"])
             if ppenet is not None:
-                ppenet = find_latest_tuple_by_string(company_main_list, ["PropertyPlantAndEquipmentNet"])[1]
+                ppenet = ppenet[1]
             else:
                 ppenet = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'PPEnet'].index
@@ -711,18 +809,18 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
             # Depreciation Filling
             depreciation = find_latest_tuple_by_string(company_main_list, ["Depreciation", "DepreciationDepletionAndAmortization", "DepreciationAmortizationAndOther", "DepreciationAmortizationAndAccretionNet"])
             if depreciation is not None:
-                depreciation = find_latest_tuple_by_string(company_main_list, ["Depreciation", "DepreciationDepletionAndAmortization", "DepreciationAmortizationAndOther", "DepreciationAmortizationAndAccretionNet"])[1]
+                depreciation = depreciation[1]
             else:
-                ppenet = 0.0
+                depreciation = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Depreciation'].index
 
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = depreciation
-            
+
             # Amortization Filling
             amortization = find_latest_tuple_by_string(company_main_list, ["AmortizationOfIntangibleAssets"])
             if amortization is not None:
-                amortization = find_latest_tuple_by_string(company_main_list, ["AmortizationOfIntangibleAssets"])[1]
+                amortization = amortization[1]
             else:
                 amortization = 0.0
             row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Amortization'].index
@@ -732,5 +830,3 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
     print(initialized_financial_df)
     return initialized_financial_df
-    #initialized_financial_df.to_csv('company_data.csv', index=False)
-    #df_cleaned.to_csv('company_meta_data.csv', index=False)

@@ -1,0 +1,392 @@
+--------------------------------------------------
+Attempting to process batch: [0:100]
+./run_data_loader.sh: line 16: python3: command not found
+Python script completed successfully for batch [0:100].
+Attempting to process batch: [100:200]
+--------------------------------------------------
+Attempting to process batch: [0:100]
+./run_data_loader.sh: line 16: python: command not found
+Python script completed successfully for batch [0:100].
+Attempting to process batch: [100:200]
+./run_data_loader.sh: line 16: python: command not found
+Python script completed successfully for batch [100:200].
+--------------------------------------------------
+Attempting to process batch: [0:100]
+./run_data_loader.sh: line 16: python: command not found
+Python script completed successfully for batch [0:100].
+--------------------------------------------------
+Attempting to process batch: [0:100]
+./run_data_loader.sh: line 16: python: command not found
+Python script completed successfully for batch [0:100].
+-------------------------------------------------- 
+Attempting to process batch: [0:100] 
+INFO:root:XBRL cache directory set to: C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\headers\xbrl_caches
+INFO:root:--- Processing XBRL instances from EDGAR links ---
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126_pre.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126_def.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126_cal.xml
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20250126.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128_pre.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128_def.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128_cal.xml
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20240128.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129_pre.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129_cal.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581023000017/nvda-20230129_def.xml
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20230129.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130_pre.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130_cal.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581022000036/nvda-20220130_def.xml
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20220130.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131_cal.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131_def.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/1045810/000104581021000010/nvda-20210131_pre.xml
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20210131.json
+INFO:root:--- Processing XBRL instances from EDGAR links ---
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/msft-20240630.htm
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/msft-20240630.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/789019/000095017023035122/msft-20230630.htm
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/msft-20230630.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/789019/000156459022026876/msft-10k_20220630.htm
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/msft-10k_20220630.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/789019/000156459021039151/msft-10k_20210630.htm
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/msft-10k_20210630.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/789019/000156459020034944/msft-10k_20200630.htm
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/msft-10k_20200630.json
+INFO:root:--- Processing XBRL instances from EDGAR links ---
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928.xsd
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928_pre.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928_def.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928_lab.xml
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/aapl-20240928_cal.xml
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/aapl-20240928.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm
+INFO:xbrl.helper.connection_manager:200 https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm
+Adding C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\validation\..\.. to sys.path
+Fetching all US company tickers...
+Successfully fetched 10042 companies. Processing batch from index 0 to 99.
+--------------------------------------------------
+ --------- Starting loading for NVDA ---------------
+Get company info received request for ticker: NVDA
+Using S3 file key: s3://backend-datarepo/company-csv-data/nvda.csv
+  Starting 10-K search for CIK 0001045810 (NVDA) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0001045810&entityName=NVDA+%28CIK+0001045810%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+Reportings data obtained for NVDA:
+  form_type  ...         cik
+0      10-K  ...  0001045810
+1      10-K  ...  0001045810
+2      10-K  ...  0001045810
+3      10-K  ...  0001045810
+4      10-K  ...  0001045810
+
+[5 rows x 6 columns]
+Latest fetched report date from accessionNumber datatable: 2025-01-26 00:00:00
+Attempting to read s3://backend-datarepo/company-csv-data/nvda.csv
+No existing data file found for NVDA in S3: company-csv-data/nvda.csv
+Newer data available or no existing data. Processing financial data...
+  Starting 10-K search for CIK 0001045810 (NVDA) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0001045810&entityName=NVDA+%28CIK+0001045810%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+  Valid reporting dates from filings: ['2021-01-31', '2022-01-30', '2023-01-29', '2024-01-28', '2025-01-26']
+  SUCCESS: Fetched 5 historical 10-K filings for NVDA in the last 5 years.
+
+  Sample of fetched data:
+  form_type  ...         cik
+0      10-K  ...  0001045810
+1      10-K  ...  0001045810
+2      10-K  ...  0001045810
+3      10-K  ...  0001045810
+4      10-K  ...  0001045810
+
+[5 rows x 6 columns]
+  Raw facts found in nvda-20250126.htm (from data_dict): 1417
+Attempting to write to s3://backend-datarepo/xbrl_json_data/nvda-20250126.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/nvda-20250126.json
+  Raw facts found in nvda-20240128.htm (from data_dict): 1387
+Attempting to write to s3://backend-datarepo/xbrl_json_data/nvda-20240128.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/nvda-20240128.json
+  Raw facts found in nvda-20230129.htm (from data_dict): 1397
+Attempting to write to s3://backend-datarepo/xbrl_json_data/nvda-20230129.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/nvda-20230129.json
+  Raw facts found in nvda-20220130.htm (from data_dict): 1307
+Attempting to write to s3://backend-datarepo/xbrl_json_data/nvda-20220130.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/nvda-20220130.json
+  Raw facts found in nvda-20210131.htm (from data_dict): 1309
+Attempting to write to s3://backend-datarepo/xbrl_json_data/nvda-20210131.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/nvda-20210131.json
+  form_type filing_date  ...         cik                        s3_json_key
+0      10-K  2025-02-26  ...  0001045810  xbrl_json_data/nvda-20250126.json
+1      10-K  2024-02-21  ...  0001045810  xbrl_json_data/nvda-20240128.json
+2      10-K  2023-02-24  ...  0001045810  xbrl_json_data/nvda-20230129.json
+3      10-K  2022-03-18  ...  0001045810  xbrl_json_data/nvda-20220130.json
+4      10-K  2021-02-26  ...  0001045810  xbrl_json_data/nvda-20210131.json
+
+[5 rows x 7 columns]
+
+Sufficient facts extracted from XBRL instances. Skipping SEC Company Facts API fallback.
+
+--- Populating DataFrame with extracted facts ---
+             Accounting Variable     2021-01-31  ...     2024-01-28      2025-01-26
+0                        Revenue  16675000000.0  ...  60922000000.0  130497000000.0
+1                    CostofSales   6279000000.0  ...  16621000000.0   32639000000.0
+2                    GrossProfit  10396000000.0  ...  44301000000.0   97858000000.0
+3               OperatingExpense            0.0  ...            0.0             0.0
+4                ResearchExpense   3924000000.0  ...   8675000000.0   12914000000.0
+5                   Depreciation    486000000.0  ...    894000000.0    1300000000.0
+6                   Amortization    612000000.0  ...    614000000.0     593000000.0
+7                OperatingIncome   4532000000.0  ...  32972000000.0   81453000000.0
+8                       Interest    184000000.0  ...    257000000.0             0.0
+9                            Tax     77000000.0  ...   4058000000.0   11146000000.0
+10                     NetIncome   4332000000.0  ...  29760000000.0   72880000000.0
+11                    TotalAsset  28791000000.0  ...  65728000000.0  111601000000.0
+12                 CurrentAssets  16055000000.0  ...  44345000000.0   80126000000.0
+13                     Inventory   1826000000.0  ...   5282000000.0   10080000000.0
+14                        PPEnet   2149000000.0  ...   3914000000.0    6283000000.0
+15                    Equity(BV)  16893000000.0  ...  42978000000.0   79327000000.0
+16             ShortTermDebt(BV)    999000000.0  ...   1250000000.0             0.0
+17              LongTermDebt(BV)   5964000000.0  ...   8459000000.0    8463000000.0
+18                      Debt(BV)   6963000000.0  ...   9709000000.0    8463000000.0
+19            CurrentLiabilities   3925000000.0  ...  10631000000.0   18047000000.0
+20                TotalLiability  11898000000.0  ...  22750000000.0   32274000000.0
+21  LongTermDebtWithoutLease(BV)   5964000000.0  ...   8459000000.0    8463000000.0
+22             LongTermLease(BV)            0.0  ...            0.0             0.0
+23              LeaseDueThisYear            0.0  ...            0.0             0.0
+24               LeaseDueYearOne    152000000.0  ...    290000000.0     354000000.0
+25               LeaseDueYearTwo    135000000.0  ...    270000000.0     331000000.0
+26             LeaseDueYearThree    115000000.0  ...    253000000.0     337000000.0
+27              LeaseDueYearFour     94000000.0  ...    236000000.0     301000000.0
+28              LeaseDueYearFive     86000000.0  ...    202000000.0     226000000.0
+29         LeaseDueAfterYearFive    288000000.0  ...    288000000.0     537000000.0
+30                          Cash    847000000.0  ...   7280000000.0    8589000000.0
+
+[31 rows x 6 columns]
+Processed financial data for NVDA:
+  Accounting Variable     2021-01-31  ...     2024-01-28      2025-01-26
+0             Revenue  16675000000.0  ...  60922000000.0  130497000000.0
+1         CostofSales   6279000000.0  ...  16621000000.0   32639000000.0
+2         GrossProfit  10396000000.0  ...  44301000000.0   97858000000.0
+3    OperatingExpense            0.0  ...            0.0             0.0
+4     ResearchExpense   3924000000.0  ...   8675000000.0   12914000000.0
+
+[5 rows x 6 columns]
+Attempting to write to s3://backend-datarepo/company-csv-data/nvda.csv
+Successfully wrote DataFrame to s3://backend-datarepo/company-csv-data/nvda.csv
+Data for NVDA saved to s3://backend-datarepo/company-csv-data/nvda.csv
+New Data successfully added - Company's financial data obtained and saved to S3 for the first time.
+ --------- Starting loading for MSFT ---------------
+Get company info received request for ticker: MSFT
+Using S3 file key: s3://backend-datarepo/company-csv-data/msft.csv
+  Starting 10-K search for CIK 0000789019 (MSFT) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0000789019&entityName=MSFT+%28CIK+0000789019%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+Reportings data obtained for MSFT:
+  form_type  ...         cik
+0      10-K  ...  0000789019
+1      10-K  ...  0000789019
+2      10-K  ...  0000789019
+3      10-K  ...  0000789019
+4      10-K  ...  0000789019
+
+[5 rows x 6 columns]
+Latest fetched report date from accessionNumber datatable: 2024-06-30 00:00:00
+Attempting to read s3://backend-datarepo/company-csv-data/msft.csv
+No existing data file found for MSFT in S3: company-csv-data/msft.csv
+Newer data available or no existing data. Processing financial data...
+  Starting 10-K search for CIK 0000789019 (MSFT) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0000789019&entityName=MSFT+%28CIK+0000789019%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+  Valid reporting dates from filings: ['2020-06-30', '2021-06-30', '2022-06-30', '2023-06-30', '2024-06-30']
+  SUCCESS: Fetched 5 historical 10-K filings for MSFT in the last 5 years.
+
+  Sample of fetched data:
+  form_type  ...         cik
+0      10-K  ...  0000789019
+1      10-K  ...  0000789019
+2      10-K  ...  0000789019
+3      10-K  ...  0000789019
+4      10-K  ...  0000789019
+
+[5 rows x 6 columns]
+  Raw facts found in msft-20240630.htm (from data_dict): 1856
+Attempting to write to s3://backend-datarepo/xbrl_json_data/msft-20240630.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/msft-20240630.json
+  Raw facts found in msft-20230630.htm (from data_dict): 1839
+Attempting to write to s3://backend-datarepo/xbrl_json_data/msft-20230630.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/msft-20230630.json
+  Raw facts found in msft-10k_20220630.htm (from data_dict): 1819
+Attempting to write to s3://backend-datarepo/xbrl_json_data/msft-10k_20220630.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/msft-10k_20220630.json
+  Raw facts found in msft-10k_20210630.htm (from data_dict): 1864
+Attempting to write to s3://backend-datarepo/xbrl_json_data/msft-10k_20210630.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/msft-10k_20210630.json
+  Raw facts found in msft-10k_20200630.htm (from data_dict): 1913
+Attempting to write to s3://backend-datarepo/xbrl_json_data/msft-10k_20200630.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/msft-10k_20200630.json
+  form_type filing_date  ...         cik                            s3_json_key
+0      10-K  2024-07-30  ...  0000789019      xbrl_json_data/msft-20240630.json
+1      10-K  2023-07-27  ...  0000789019      xbrl_json_data/msft-20230630.json
+2      10-K  2022-07-28  ...  0000789019  xbrl_json_data/msft-10k_20220630.json
+3      10-K  2021-07-29  ...  0000789019  xbrl_json_data/msft-10k_20210630.json
+4      10-K  2020-07-30  ...  0000789019  xbrl_json_data/msft-10k_20200630.json
+
+[5 rows x 7 columns]
+
+Sufficient facts extracted from XBRL instances. Skipping SEC Company Facts API fallback.
+
+--- Populating DataFrame with extracted facts ---
+             Accounting Variable  ...      2024-06-30
+0                        Revenue  ...   64773000000.0
+1                    CostofSales  ...   15272000000.0
+2                    GrossProfit  ...  171008000000.0
+3               OperatingExpense  ...             0.0
+4                ResearchExpense  ...   29510000000.0
+5                   Depreciation  ...   15200000000.0
+6                   Amortization  ...    4800000000.0
+7                OperatingIncome  ...  109433000000.0
+8                       Interest  ...    2935000000.0
+9                            Tax  ...   19651000000.0
+10                     NetIncome  ...   88136000000.0
+11                    TotalAsset  ...  512163000000.0
+12                 CurrentAssets  ...  159734000000.0
+13                     Inventory  ...    1246000000.0
+14                        PPEnet  ...  135591000000.0
+15                    Equity(BV)  ...  268477000000.0
+16             ShortTermDebt(BV)  ...             0.0
+17              LongTermDebt(BV)  ...   42688000000.0
+18                      Debt(BV)  ...   42688000000.0
+19            CurrentLiabilities  ...  125286000000.0
+20                TotalLiability  ...  243686000000.0
+21  LongTermDebtWithoutLease(BV)  ...   42688000000.0
+22             LongTermLease(BV)  ...             0.0
+23              LeaseDueThisYear  ...             0.0
+24               LeaseDueYearOne  ...    4124000000.0
+25               LeaseDueYearTwo  ...    3549000000.0
+26             LeaseDueYearThree  ...    2981000000.0
+27              LeaseDueYearFour  ...    2405000000.0
+28              LeaseDueYearFive  ...    1924000000.0
+29         LeaseDueAfterYearFive  ...    6587000000.0
+30                          Cash  ...   18315000000.0
+
+[31 rows x 6 columns]
+Processed financial data for MSFT:
+  Accounting Variable     2020-06-30  ...      2023-06-30      2024-06-30
+0             Revenue  68041000000.0  ...   64699000000.0   64773000000.0
+1         CostofSales  16017000000.0  ...   17804000000.0   15272000000.0
+2         GrossProfit  96937000000.0  ...  146052000000.0  171008000000.0
+3    OperatingExpense            0.0  ...             0.0             0.0
+4     ResearchExpense  19269000000.0  ...   27195000000.0   29510000000.0
+
+[5 rows x 6 columns]
+Attempting to write to s3://backend-datarepo/company-csv-data/msft.csv
+Successfully wrote DataFrame to s3://backend-datarepo/company-csv-data/msft.csv
+Data for MSFT saved to s3://backend-datarepo/company-csv-data/msft.csv
+New Data successfully added - Company's financial data obtained and saved to S3 for the first time.
+ --------- Starting loading for AAPL ---------------
+Get company info received request for ticker: AAPL
+Using S3 file key: s3://backend-datarepo/company-csv-data/aapl.csv
+  Starting 10-K search for CIK 0000320193 (AAPL) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0000320193&entityName=AAPL+%28CIK+0000320193%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+Reportings data obtained for AAPL:
+  form_type  ...         cik
+0      10-K  ...  0000320193
+1      10-K  ...  0000320193
+2      10-K  ...  0000320193
+3      10-K  ...  0000320193
+4      10-K  ...  0000320193
+
+[5 rows x 6 columns]
+Latest fetched report date from accessionNumber datatable: 2024-09-28 00:00:00
+Attempting to read s3://backend-datarepo/company-csv-data/aapl.csv
+No existing data file found for AAPL in S3: company-csv-data/aapl.csv
+Newer data available or no existing data. Processing financial data...
+  Starting 10-K search for CIK 0000320193 (AAPL) from 2020-07-02 to 2025-07-01 (fetching first 10 results)...
+  Requesting URL: https://efts.sec.gov/LATEST/search-index?ciks=0000320193&entityName=AAPL+%28CIK+0000320193%29&filter_forms=10-K&startdt=2020-07-02&enddt=2025-07-01&start=0&rows=10
+  Fetched 5 filings in this batch. Total collected: 5
+  Valid reporting dates from filings: ['2020-09-26', '2021-09-25', '2022-09-24', '2023-09-30', '2024-09-28']
+  SUCCESS: Fetched 5 historical 10-K filings for AAPL in the last 5 years.
+
+  Sample of fetched data:
+  form_type  ...         cik
+0      10-K  ...  0000320193
+1      10-K  ...  0000320193
+2      10-K  ...  0000320193
+3      10-K  ...  0000320193
+4      10-K  ...  0000320193
+
+[5 rows x 6 columns]
+  Raw facts found in aapl-20240928.htm (from data_dict): 1127
+Attempting to write to s3://backend-datarepo/xbrl_json_data/aapl-20240928.json
+Successfully wrote JSON to s3://backend-datarepo/xbrl_json_data/aapl-20240928.json
+Traceback (most recent call last):
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\validation\bash_getallcompanydata.py", line 197, in <module>
+    run_dataloader(args.start_index, args.end_index)
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\validation\bash_getallcompanydata.py", line 183, in run_dataloader
+    get_company_info(ticker, update_all=True)
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\validation\bash_getallcompanydata.py", line 121, in get_company_info
+    processed_financial_data = xbrl_data_processor(reportings_data, ticker, cik)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\validation\..\..\backend\headers\xbrlprocesscheck.py", line 350, in xbrl_data_processor
+    inst: XbrlInstance = parser.parse_instance(schema_url)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\instance.py", line 811, in parse_instance
+    return parse_ixbrl_url(uri, self.cache) if is_url(uri) else parse_ixbrl(uri, self.cache, instance_url, encoding)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\instance.py", line 481, in parse_ixbrl_url
+    return parse_ixbrl(instance_path, cache, instance_url, encoding)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\instance.py", line 529, in parse_ixbrl
+    taxonomy: TaxonomySchema = parse_taxonomy_url(schema_url, cache)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\taxonomy.py", line 629, in parse_taxonomy_url
+    schema_path: str = cache.cache_file(schema_url)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\cache.py", line 81, in cache_file
+    query_response = self.connection_manager.download(file_url, headers=self.headers)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\.venv\Lib\site-packages\xbrl\helper\connection_manager.py", line 49, in download
+    time.sleep(max(0, self.next_try_systime_ms - self._get_systime_ms()) / 1000)
+KeyboardInterrupt
+^C-------------------------------------------------- 
+Attempting to process batch: [0:100] 
+Processing batch, please wait... 
+INFO:root:XBRL cache directory set to: C:\Users\abansal8\OneDrive\OneDrive - JLR\Documents\research-base\backend\headers\xbrl_caches
+INFO:root:--- Processing XBRL instances from EDGAR links ---
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581025000023/nvda-20250126.htm
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
+INFO:root:Successfully uploaded XBRL JSON to s3://None/xbrl_json_data/nvda-20250126.json
+INFO:root:Processing XBRL instance from: https://www.sec.gov/Archives/edgar/data/1045810/000104581024000029/nvda-20240128.htm
+INFO:root:Transformation rule durday of registry ixt-sec is not supported. The parser will just parse the value as it is and not transform it according to the rule.
