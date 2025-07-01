@@ -59,10 +59,10 @@ parser = XbrlParser(cache)
 def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
     # ... (no change, already in your code) ...
     financial_accounting_variables = [
-        'Revenue', 'OperatingIncome', 'Equity(BV)', 'ShortTermDebt(BV)',
-        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'Cash', 'Tax', 
-        'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 'LeaseDueYearFive',
-        'LeaseDueAfterYearFive', 'NetIncome', 'CurrentAssets', 'CurrentLiabilities', 'TotalLiability', 'TotalAsset', 'Inventory'
+        'Revenue', 'CostofSales', 'GrossProfit', 'OperatingExpense', 'ResearchExpense', 'Depreciation', 'Amortization', 'OperatingIncome', 'Interest', 'Tax', 'NetIncome',
+        'TotalAsset', 'CurrentAssets', 'Inventory', 'PPEnet', 'Equity(BV)', 'ShortTermDebt(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'CurrentLiabilities', 'TotalLiability', 
+        'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour', 
+        'LeaseDueYearFive', 'LeaseDueAfterYearFive', 'Cash'
     ]
 
     sorted_report_dates = sorted(all_extracted_facts_dict.keys())
@@ -382,7 +382,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
     print(f"Total facts extracted from all JSON files: {len(all_extracted_facts)}")
 
     keys_view = all_extracted_facts.keys()
-    print(f"Using .keys(): {keys_view}")
+    #print(f"Using .keys(): {keys_view}")
 
 
 # ----------- Creating Financial Company Database --------------# 
@@ -644,6 +644,94 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = inventory
+
+            # CostOfSales Filling
+            cogs = find_latest_tuple_by_string(company_main_list, ["CostOfRevenue", "CostOfGoodsAndServicesSold"])
+            if cogs is not None:
+                cogs = find_latest_tuple_by_string(company_main_list, ["CostOfRevenue", "CostOfGoodsAndServicesSold"])[1]
+            else:
+                cogs = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'CostofSales'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = cogs
+
+            # GrossProfit Filling
+            grossprofit = find_latest_tuple_by_string(company_main_list, ["GrossProfit"])
+            if grossprofit is not None:
+                grossprofit = find_latest_tuple_by_string(company_main_list, ["GrossProfit"])[1]
+            else:
+                grossprofit = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'GrossProfit'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = grossprofit
+
+            # OperatingExpense Filling
+            operatingexpense = find_latest_tuple_by_string(company_main_list, ["CostsAndExpenses"])
+            if operatingexpense is not None:
+                operatingexpense = find_latest_tuple_by_string(company_main_list, ["CostsAndExpenses"])[1]
+            else:
+                operatingexpense = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'OperatingExpense'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = operatingexpense
+
+            # ResearchExpense Filling
+            researchexpense = find_latest_tuple_by_string(company_main_list, ["ResearchAndDevelopmentExpense"])
+            if researchexpense is not None:
+                researchexpense = find_latest_tuple_by_string(company_main_list, ["ResearchAndDevelopmentExpense"])[1]
+            else:
+                researchexpense = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'ResearchExpense'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = researchexpense
+
+            # InterestExpense Filling
+            interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense"])
+            if interestexpense is not None:
+                interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense"])[1]
+            else:
+                interestexpense = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Interest'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = interestexpense
+
+            # PPE-net Filling
+            ppenet = find_latest_tuple_by_string(company_main_list, ["PropertyPlantAndEquipmentNet"])
+            if ppenet is not None:
+                ppenet = find_latest_tuple_by_string(company_main_list, ["PropertyPlantAndEquipmentNet"])[1]
+            else:
+                ppenet = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'PPEnet'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = ppenet
+
+            # Depreciation Filling
+            depreciation = find_latest_tuple_by_string(company_main_list, ["Depreciation", "DepreciationDepletionAndAmortization", "DepreciationAmortizationAndOther", "DepreciationAmortizationAndAccretionNet"])
+            if depreciation is not None:
+                depreciation = find_latest_tuple_by_string(company_main_list, ["Depreciation", "DepreciationDepletionAndAmortization", "DepreciationAmortizationAndOther", "DepreciationAmortizationAndAccretionNet"])[1]
+            else:
+                ppenet = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Depreciation'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = depreciation
+            
+            # Amortization Filling
+            amortization = find_latest_tuple_by_string(company_main_list, ["AmortizationOfIntangibleAssets"])
+            if amortization is not None:
+                amortization = find_latest_tuple_by_string(company_main_list, ["AmortizationOfIntangibleAssets"])[1]
+            else:
+                amortization = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'Amortization'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = amortization
 
     print(initialized_financial_df)
     return initialized_financial_df

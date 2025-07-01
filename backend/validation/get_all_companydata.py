@@ -186,15 +186,15 @@ def run_dataloader():
     print(f"Successfully fetched {len(all_companies)} companies.")
     print("--------------------------------------------------")
 
-    
+    '''
     for iter in all_companies:
         time.sleep(1)
         ticker = iter['ticker']
         print(f" --------- Starting loading for {ticker} ---------------")
         get_company_info(ticker)
-    
+    '''
 
-    #get_company_info("XOM")
+    get_company_info("IBM")
     print("Successfully iterations completed !")
        
 
