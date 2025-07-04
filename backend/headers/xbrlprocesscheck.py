@@ -59,8 +59,8 @@ parser = XbrlParser(cache)
 
 def create_initialized_financial_dataframe_by_date(all_extracted_facts_dict):
     financial_accounting_variables = [
-        'Revenue', 'CostofSales', 'GrossProfit', 'OperatingExpense', 'ResearchExpense', 'Depreciation', 'Amortization', 'OperatingIncome', 'Interest', 'Tax', 'NetIncome',
-        'TotalAsset', 'CurrentAssets', 'Inventory', 'PPEnet', 'Equity(BV)', 'ShortTermDebt(BV)', 'LongTermDebt(BV)', 'Debt(BV)', 'CurrentLiabilities', 'TotalLiability',
+        'Revenue', 'CostofSales', 'GrossProfit', 'OperatingExpense', 'ResearchExpense', 'Depreciation', 'Amortization', 'OperatingIncome', 'OperatingIncomeAfterInterest', 'InteresIncome', 'Interest', 'Tax', 'NetIncome',
+        'TotalAsset', 'CurrentAssets', 'Inventory', 'PPEnet', 'MinorityInterest', 'EquityIncludingMinorityInterest', 'Equity(BV)', 'ShortTermDebt(BV)', 'LongTermDebtWithLease(BV)', 'Debt(BV)', 'CurrentLiabilities', 'TotalLiability',
         'LongTermDebtWithoutLease(BV)', 'LongTermLease(BV)', 'LeaseDueThisYear', 'LeaseDueYearOne', 'LeaseDueYearTwo', 'LeaseDueYearThree', 'LeaseDueYearFour',
         'LeaseDueYearFive', 'LeaseDueAfterYearFive', 'Cash'
     ]
@@ -381,6 +381,9 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
                         if ("dimensions" in fact_data and "concept" in fact_data["dimensions"] and
                                 "period" in fact_data["dimensions"] and "value" in fact_data):
 
+                            if len(fact_data["dimensions"]) != 5:
+                                continue
+
                             concept_value = fact_data["dimensions"]["concept"]
                             period_value = fact_data["dimensions"]["period"]
                             actual_value = fact_data["value"]
@@ -416,7 +419,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
             except Exception as e:
                 logging.error(f"Error processing {schema_url}: {e}")
-                df.at[index, 's3_json_key'] = f"ERROR: {e}"
+                df.at[index, 's3_json_key'] = f"ERROR {e}"
                 all_extracted_facts_from_xbrl[report_date] = [] # Mark as empty due to error
                 should_use_api_fallback = True # An error processing an XBRL also triggers fallback
                 if "The taxonomy with namespace http://xbrl.sec.gov/cyd/2024 could not be found" in str(e):
@@ -427,7 +430,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
         print(df)
         if loop_break_flag:
             print("Exiting XBRL parsing loop early.")
-            sys.exit()
+            sys.exit(1)
     # else: condition for should_use_api_fallback already handled at the top
 
     final_facts_for_processing = {}
@@ -536,7 +539,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_shortterm_debt
 
             # LongTermDebt without lease (Book Value) Filling
-            book_value_longtermdebt_withoutlease = find_latest_tuple_by_string(company_main_list, ["LongTermDebtNoncurrent"])
+            book_value_longtermdebt_withoutlease = find_latest_tuple_by_string(company_main_list, ["LongTermDebtNoncurrent", "LongTermDebt"])
             if book_value_longtermdebt_withoutlease is not None:
                 book_value_longtermdebt_withoutlease = book_value_longtermdebt_withoutlease[1]
             else:
@@ -558,8 +561,12 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_longterm_lease
 
             # LongTerm Debt(BV) Filling
-            book_value_longtermdebt = book_value_longtermdebt_withoutlease + book_value_longterm_lease
-            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermDebt(BV)'].index
+            book_value_longtermdebt = find_latest_tuple_by_string(company_main_list, ["LongTermDebtAndCapitalLeaseObligations", "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities", "DebtAndCapitalLeaseObligations"])
+            if book_value_longtermdebt is not None:
+                book_value_longtermdebt = book_value_longtermdebt[1]
+            else:
+                book_value_longtermdebt = book_value_longtermdebt_withoutlease + book_value_longterm_lease
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'LongTermDebtWithLease(BV)'].index
 
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_longtermdebt
@@ -572,7 +579,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
                 initialized_financial_df.at[row_index[0], report_date_str] = book_value_debt
 
             # Cash Filling
-            cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue"])
+            cash = find_latest_tuple_by_string(company_main_list, ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"])
             if cash is not None:
                 cash = cash[1]
             else:
@@ -673,7 +680,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
 
             # Net Income Filling
-            netincome = find_latest_tuple_by_string(company_main_list, ["NetIncomeLoss"])
+            netincome = find_latest_tuple_by_string(company_main_list, ["NetIncomeLoss", "ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic"])
             if netincome is not None:
                 netincome = netincome[1]
             else:
@@ -785,7 +792,7 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
                 initialized_financial_df.at[row_index[0], report_date_str] = researchexpense
 
             # InterestExpense Filling
-            interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense"])
+            interestexpense = find_latest_tuple_by_string(company_main_list, ["InterestExpense", "InterestExpenseNonoperating", "InterestAndDebtExpense", "InterestIncomeExpenseNet"])
             if interestexpense is not None:
                 interestexpense = interestexpense[1]
             else:
@@ -827,6 +834,50 @@ def xbrl_data_processor(trailing_data, ticker, cik_original, s3_bucket_name=None
 
             if not row_index.empty:
                 initialized_financial_df.at[row_index[0], report_date_str] = amortization
+
+            # OperatingIncomeAfterINterestExpense Filling
+            incomeafterinterest = find_latest_tuple_by_string(company_main_list, ["IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments", "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"])
+            if incomeafterinterest is not None:
+                incomeafterinterest = incomeafterinterest[1]
+            else:
+                incomeafterinterest = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'OperatingIncomeAfterInterest'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = incomeafterinterest
+
+            # MinorityInterest Filling
+            miniorityinterest = find_latest_tuple_by_string(company_main_list, ["MinorityInterest"])
+            if miniorityinterest is not None:
+                miniorityinterest = miniorityinterest[1]
+            else:
+                miniorityinterest = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'MinorityInterest'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = miniorityinterest
+
+            # EquityIncludingMinorityInterest Filling
+            equitywithminiorityinterest = find_latest_tuple_by_string(company_main_list, ["StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"])
+            if equitywithminiorityinterest is not None:
+                equitywithminiorityinterest = equitywithminiorityinterest[1]
+            else:
+                equitywithminiorityinterest = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'EquityIncludingMinorityInterest'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = equitywithminiorityinterest
+
+            # InterestIncome Filling
+            interestincome = find_latest_tuple_by_string(company_main_list, ["InvestmentIncomeInterest"])
+            if interestincome is not None:
+                interestincome = interestincome[1]
+            else:
+                interestincome = 0.0
+            row_index = initialized_financial_df[initialized_financial_df['Accounting Variable'] == 'InterestIncome'].index
+
+            if not row_index.empty:
+                initialized_financial_df.at[row_index[0], report_date_str] = interestincome
 
     print(initialized_financial_df)
     return initialized_financial_df

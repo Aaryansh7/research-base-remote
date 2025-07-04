@@ -1,65 +1,67 @@
 @echo off
-setlocal
+setlocal ENABLEDELAYEDEXPANSION
 
-:: Define batch size
 SET BATCH_SIZE=100
 
-:: Initialize start and end indices
-SET START_INDEX=0
-SET END_INDEX=%BATCH_SIZE%
 
-:: Define a log file for detailed output
+SET START_INDEX=0
+
+SET END_INDEX=!BATCH_SIZE! 
+
 SET LOG_FILE="dataloader_run.log"
 
+
 echo Starting data loading process. Logs will be written to %LOG_FILE%
-echo -------------------------------------------------- >> %LOG_FILE%
+echo -------------------------------------------------- >> "%LOG_FILE%"
 echo Starting data loading process. Logs will be written to %LOG_FILE%
 
 :loop_start
-    echo Attempting to process batch: [%START_INDEX%:%END_INDEX%]
-    echo Attempting to process batch: [%START_INDEX%:%END_INDEX%] >> %LOG_FILE%
+    echo Attempting to process batch: [!START_INDEX!:!END_INDEX!]
+    echo Attempting to process batch: [!START_INDEX!:!END_INDEX!] >> "%LOG_FILE%"
     
-    :: Add a loading message before executing the Python script
+
     echo Processing batch, please wait...
-    echo Processing batch, please wait... >> %LOG_FILE%
+    echo Processing batch, please wait... >> "%LOG_FILE%"
     
-    :: Execute the Python script with current batch indices
-    :: Redirect stdout and stderr to the log file
-    python bash_getallcompanydata.py --start_index %START_INDEX% --end_index %END_INDEX% >> %LOG_FILE% 2>&1
+
+    python bash_getallcompanydata.py --start_index !START_INDEX! --end_index !END_INDEX!
     
-    :: Capture the exit status of the Python script
-    SET PYTHON_EXIT_STATUS=%ERRORLEVEL%
 
-    IF %PYTHON_EXIT_STATUS% EQU 0 (
-        echo Python script completed successfully for batch [%START_INDEX%:%END_INDEX%].
-        echo Python script completed successfully for batch [%START_INDEX%:%END_INDEX%]. >> %LOG_FILE%
-        
-        :: Increment indices for the next batch
-        SET /A START_INDEX=%START_INDEX% + %BATCH_SIZE%
-        SET /A END_INDEX=%END_INDEX% + %BATCH_SIZE%
+    SET PYTHON_EXIT_STATUS=!ERRORLEVEL!
+    echo PYTHON Exit Status: !PYTHON_EXIT_STATUS!
+    echo PYTHON Exit Status: !PYTHON_EXIT_STATUS! >> "%LOG_FILE%"
 
-        :: Add a small delay between successful batches
-        timeout /t 5 /nobreak >NUL
-
-    ) ELSE IF %PYTHON_EXIT_STATUS% EQU 1 (
-        echo Python script exited with an error (status 1) for batch [%START_INDEX%:%END_INDEX%]. Retrying this batch...
-        echo Python script exited with an error (status 1) for batch [%START_INDEX%:%END_INDEX%]. Retrying this batch... >> %LOG_FILE%
-        :: The script will retry the same batch in the next iteration of the loop.
-        :: Add a delay before retrying
+    IF !PYTHON_EXIT_STATUS! EQU 0 (
         timeout /t 10 /nobreak >NUL
-    ) ELSE (
-        echo Python script exited with an unexpected status: %PYTHON_EXIT_STATUS% for batch [%START_INDEX%:%END_INDEX%].
-        echo Python script exited with an unexpected status: %PYTHON_EXIT_STATUS% for batch [%START_INDEX%:%END_INDEX%]. >> %LOG_FILE%
-        echo Exiting script.
-        echo Exiting script. >> %LOG_FILE%
-        GOTO :eof :: Exit the batch script
-    )
+        echo Python script completed successfully for batch [!START_INDEX!:!END_INDEX!].
+        echo Python script completed successfully for batch [!START_INDEX!:!END_INDEX!]. >> "%LOG_FILE%"
+        
+        SET /A START_INDEX=!START_INDEX! + !BATCH_SIZE!
+        SET /A END_INDEX=!END_INDEX! + !BATCH_SIZE!
 
-    GOTO :loop_start :: Continue to the next iteration
+        timeout /t 5 /nobreak >NUL
+        GOTO :loop_start
+    ) ELSE (
+        echo Python script exited with a non-zero error status (!PYTHON_EXIT_STATUS!) for batch [!START_INDEX!:!END_INDEX!].
+        echo Python script exited with a non-zero error status (!PYTHON_EXIT_STATUS!) for batch [!START_INDEX!:!END_INDEX!]. >> "%LOG_FILE%"
+        
+        IF !PYTHON_EXIT_STATUS! EQU 1 (
+            echo Retrying this batch...
+            echo Retrying this batch... >> "%LOG_FILE%"
+            timeout /t 10 /nobreak >NUL
+            GOTO :loop_start
+        ) ELSE (
+            echo Unexpected Python script exit status. Terminating process.
+            echo Unexpected Python script exit status. Terminating process. >> "%LOG_FILE%"
+            GOTO :eof
+        )
+    )
+    
+GOTO :eof 
 
 :eof
-echo -------------------------------------------------- >> %LOG_FILE%
-echo Data loading process finished. >> %LOG_FILE%
+echo -------------------------------------------------- >> "%LOG_FILE%"
+echo Data loading process finished. >> "%LOG_FILE%"
 echo --------------------------------------------------
 echo Data loading process finished.
 endlocal
